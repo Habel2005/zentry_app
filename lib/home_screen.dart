@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:zentry_insights/lib/dashboard_screen.dart';
-import 'package:zentry_insights/lib/call_list_screen.dart';
-import 'package:zentry_insights/lib/caller_overview_screen.dart';
-import 'package:zentry_insights/lib/admission_baseline_screen.dart';
+import 'admission_baseline_screen.dart';
+import 'call_list_screen.dart';
+import 'caller_overview_screen.dart';
+import 'dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
     CallListScreen(),
@@ -29,9 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
+      body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -44,11 +43,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Caller Overview',
+            label: 'Callers',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics),
-            label: 'Admission Baseline',
+            label: 'Admissions',
           ),
         ],
         currentIndex: _selectedIndex,

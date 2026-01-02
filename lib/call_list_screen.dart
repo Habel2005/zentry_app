@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:zentry_insights/lib/badge.dart';
-import 'package:zentry_insights/lib/call_detail_screen.dart';
-import 'package:zentry_insights/lib/theme.dart';
+import 'package:flutter/material.dart' hide Badge;
+import 'badge.dart';
+import 'call_detail_screen.dart';
+import 'models/call_list_item.dart';
+import 'queries.dart';
+import 'theme.dart';
 
 class CallListScreen extends StatefulWidget {
   const CallListScreen({super.key});
@@ -11,36 +13,17 @@ class CallListScreen extends StatefulWidget {
 }
 
 class _CallListScreenState extends State<CallListScreen> {
-  final List<Map<String, dynamic>> _calls = [
-    {
-      'id': 'C12345',
-      'timestamp': 'Today, 10:30 AM',
-      'status': 'Completed',
-      'language': 'English',
-      'duration': '5m 30s'
-    },
-    {
-      'id': 'C12346',
-      'timestamp': 'Today, 10:35 AM',
-      'status': 'Dropped',
-      'language': 'Spanish',
-      'duration': '2m 15s'
-    },
-    {
-      'id': 'C12347',
-      'timestamp': 'Today, 10:40 AM',
-      'status': 'Completed',
-      'language': 'English',
-      'duration': '10m 5s'
-    },
-  ];
+  Future<List<CallListItem>>? _callListFuture;
 
-  Future<void> _refresh() async {
-    // Simulate a network request
-    await Future.delayed(const Duration(seconds: 1));
+  @override
+  void initState() {
+    super.initState();
+    _callListFuture = Queries.getCallList();
+  }
+
+  void _refreshCallList() {
     setState(() {
-      // For now, just re-order the list
-      _calls.shuffle();
+      _callListFuture = Queries.getCallList();
     });
   }
 
@@ -48,41 +31,60 @@ class _CallListScreenState extends State<CallListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calls'),
+        title: const Text('Call History'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // TODO: Implement filtering
-            },
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshCallList,
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: ListView.builder(
-          itemCount: _calls.length,
-          itemBuilder: (context, index) {
-            final call = _calls[index];
-            return ListTile(
-              title: Text('Call ID: ${call['id']}'),
-              subtitle: Text(
-                  '${call['timestamp']} - ${call['duration']} - ${call['language']}'),
-              trailing: Badge(
-                text: call['status'],
-                color: call['status'] == 'Completed'
-                    ? Colors.green
-                    : AppTheme.red,
-              ),
-              onTap: () {
-                Navigator.push(
+      body: FutureBuilder<List<CallListItem>>(
+        future: _callListFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No calls found'));
+          }
+
+          final calls = snapshot.data!;
+
+          return ListView.builder(
+            itemCount: calls.length,
+            itemBuilder: (context, index) {
+              final call = calls[index];
+              return ListTile(
+                title: Text('Call ID: ${call.callId}'),
+                subtitle: Text(
+                    '${call.callStartTime} - ${call.duration ?? 'Ongoing'} - ${call.language}'),
+                trailing: Wrap(
+                  spacing: 8.0,
+                  children: [
+                    if (call.isRepeatCaller)
+                      const Chip(label: Text('Repeat')),
+                    Badge(
+                      text: call.callStatus,
+                      color: call.callStatus == 'completed'
+                          ? Colors.green
+                          : AppTheme.red,
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const CallDetailScreen()));
-              },
-            );
-          },
-        ),
+                      builder: (context) => CallDetailScreen(callId: call.callId),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

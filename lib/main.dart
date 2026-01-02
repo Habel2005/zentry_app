@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:zentry_insights/lib/theme.dart';
-import 'package:zentry_insights/lib/login_screen.dart';
-import 'package:zentry_insights/lib/home_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'home_screen.dart';
+import 'login_screen.dart';
+import 'supabase_service.dart';
+import 'theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: ".env");
+
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+
+  SupabaseService.client = Supabase.instance.client;
+
   runApp(const MyApp());
 }
 
@@ -16,8 +29,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Zentry Insights',
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      initialRoute: '/',
       routes: {
+        '/': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
       },
     );
