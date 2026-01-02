@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
+import 'profile_screen.dart';
 import 'supabase_service.dart';
 import 'theme.dart';
 
@@ -11,9 +12,9 @@ void main() async {
 
   await dotenv.load(fileName: ".env");
 
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+await Supabase.initialize(
+    url: 'https://qulpashxipuajuwxpwar.supabase.co',
+    anonKey: 'sb_publishable_cYUpT-KcS_Yo8exbhIHdXw_tPCGGBsL',
   );
 
   SupabaseService.client = Supabase.instance.client;
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }
