@@ -1,34 +1,107 @@
-# Zentry Admin Application Blueprint
+
+# Admin Panel Blueprint
 
 ## Overview
 
-Zentry Admin is a sophisticated, internal-facing Flutter application designed for real-time monitoring and analysis of inbound sales calls. It leverages a Supabase backend for data persistence and provides a professional, minimalist user interface for administrators to track call metrics, review call details, and manage system baselines.
+This document outlines the design and features of a Flutter-based admin panel for monitoring and analyzing call data from a Supabase backend. The application is designed to be a "hardcore" enterprise-grade tool with a focus on data density, performance, and a professional user experience.
 
 ## Style, Design, and Features
 
-### Version 1.0 (Current)
+### Architecture
 
-*   **Professional Minimalism:** The application adopts a clean, modern aesthetic with a focus on usability and clarity. The design language is inspired by top-tier products from Google and Microsoft, featuring:
-    *   **Typography:** A refined font palette from `google_fonts` (`Montserrat`, `Lato`, `Roboto`) to create a strong visual hierarchy.
-    *   **Color Scheme:** A sophisticated and cohesive color palette with a deep purple primary color, complemented by a range of neutral tones.
-    *   **Layout & Spacing:** Deliberate use of spacing, padding, and alignment to create an uncluttered and breathable interface.
-*   **Navigation Rail:** A permanent, modern `NavigationRail` on the left side provides intuitive navigation between the main sections of the app:
-    *   Dashboard
-    *   Call History
-    *   Caller Overview (Placeholder)
-    *   Admission Baselines (Placeholder)
-*   **Dashboard:**
-    *   A visually engaging grid of custom `StatCard` widgets, each displaying a key metric with a title, value, and icon.
-*   **Call List & Detail:**
-    *   A clean and readable list of calls with essential details.
-    *   A detailed view for each call, including metadata, transcript, and other relevant information.
-*   **Secure Credential Management:** The application uses the `flutter_dotenv` package to securely load Supabase credentials from a `.env` file, ensuring no sensitive information is hardcoded in the application.
+*   **State Management:** `provider` for theme management.
+*   **Routing:** `go_router` for declarative navigation and deep linking.
+*   **Data Layer:** `supabase_flutter` for real-time data fetching from Supabase views.
+*   **Styling:** Material 3 with a professional color scheme and `google_fonts` for typography.
+
+### Data Models
+
+The application uses the following data models, which correspond to the Supabase database views:
+
+*   `AdminCallsOverview`: Aggregated call metrics for the dashboard.
+*   `AdminCallList`: A list of all calls with summary data.
+*   `CallDetail`: Detailed information for a single call, including the full transcript and AI processing timeline.
+*   `SttQualityDistribution`: A nested model within `AdminCallsOverview` to represent the distribution of STT quality.
+*   `AiProcessingStep`: A model for a single step in the AI processing pipeline.
+*   `TranscriptItem`: A model for a single item in the call transcript.
+
+### File and Folder Structure
+
+```
+lib/
+├── models/
+│   ├── admin_calls_overview.dart
+│   ├── admin_call_list.dart
+│   ├── call_detail.dart
+│   ├── stt_quality_distribution.dart
+│   ├── ai_processing_step.dart
+│   └── transcript_item.dart
+├── screens/
+│   ├── login_screen.dart
+│   ├── main_screen.dart
+│   ├── dashboard_screen.dart
+│   ├── call_log_screen.dart
+│   └── call_detail_screen.dart
+├── services/
+│   └── supabase_service.dart
+├── widgets/
+│   └── stat_card.dart
+├── main.dart
+└── theme_provider.dart
+```
+
+### Screens
+
+#### 1. Login Screen
+
+*   **Route:** `/login`
+*   **Functionality:**
+    *   Allows users to sign in with email and password.
+    *   Handles authentication against the Supabase `auth.users` table.
+    *   Redirects to the main application upon successful login.
+
+#### 2. Main Screen (Shell Route)
+
+*   **Route:** `/`
+*   **Functionality:**
+    *   Acts as the main application shell, containing the `NavigationRail`.
+    *   The `NavigationRail` provides access to the Dashboard, Call Log, and Profile screens.
+    *   Includes a theme toggle for switching between light and dark modes.
+    *   Contains the user's profile information and a logout button.
+
+#### 3. Dashboard Screen
+
+*   **Route:** `/` (nested within the `MainScreen` shell)
+*   **Functionality:**
+    *   Displays a real-time overview of key call metrics from the `admin_calls_overview` view.
+    *   Uses responsive `KpiCard` widgets to display stats like total calls, ongoing calls, dropped calls, and the AI vs. human ratio.
+    *   Includes a placeholder for a chart to visualize the STT quality distribution.
+
+#### 4. Call Log Screen
+
+*   **Route:** `/` (nested within the `MainScreen` shell, this is the default screen)
+*   **Functionality:**
+    *   Displays a paginated and sortable table of all calls from the `admin_call_list` view.
+    *   Uses a `PaginatedDataTable` to provide a professional, data-dense view of the call history.
+    *   Columns include Start Time, Duration, Status, Language, STT Quality, and a "Repeat Caller" badge.
+    *   Allows users to navigate to the `CallDetailScreen` by clicking on a row.
+    *   Includes a placeholder for filtering functionality.
+
+#### 5. Call Detail Screen
+
+*   **Route:** `/calls/:id` (nested within the `MainScreen` shell)
+*   **Functionality:**
+    *   Provides a comprehensive, three-section view of a single call from the `admin_call_detail` view.
+    *   **Metadata:** A header section with key call information.
+    *   **Transcript Viewer:** A chat-bubble-style display of the conversation, with visual indicators for low-confidence STT.
+    *   **AI Processing Timeline:** A chronological list of AI pipeline steps, including status and latency.
 
 ## Current Plan
 
-I am currently in the process of a major UI overhaul to elevate the application to a more professional and creative standard. The next steps are to:
+The current plan is to continue building out the features and functionality of the application, with a focus on the following:
 
-1.  **Redesign the Call List Screen:** I will redesign the call list to be more visually appealing and informative, using custom widgets to display each call's information.
-2.  **Enhance the Call Detail Screen:** I will enhance the call detail screen to present the information in a more organized and aesthetically pleasing way.
-3.  **Implement the Caller Overview and Admission Baseline Screens:** I will replace the placeholder screens with fully functional screens that display the relevant data.
-4.  **Add Animations and Micro-interactions:** I will introduce subtle animations and micro-interactions to enhance the user experience and create a more polished feel.
+*   **Implementing Filtering:** Add filtering capabilities to the `CallLogScreen`.
+*   **STT Quality Chart:** Implement the STT quality distribution chart on the `DashboardScreen`.
+*   **Real-time Updates:** Ensure that the dashboard and call log update in real-time as new data becomes available in Supabase.
+*   **Error Handling:** Enhance error handling and provide more informative error messages to the user.
+*   **UI Polish:** Continue to refine the UI and UX of the application to meet the "hardcore" enterprise standard.
