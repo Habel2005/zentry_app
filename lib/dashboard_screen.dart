@@ -54,20 +54,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     _buildSummaryCards(data),
                     const SizedBox(height: 20),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 5,
-                          child: _buildAiVsHumanChart(data),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          flex: 6,
-                          child: _buildSttQualityChart(data),
-                        ),
-                      ],
-                    ),
+                    _buildSttQualityChart(data),
+                    const SizedBox(height: 20),
+                    _buildAiVsHumanChart(data),
+
                   ],
                 ),
               ),
@@ -125,8 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 12),
           Text(value,
-              style:
-                  const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
         ],
@@ -212,7 +201,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildSttQualityChart(DashboardData data) {
     return Container(
       padding: const EdgeInsets.all(20),
-      height: 250, // Fixed height
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -230,78 +218,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const Text('STT Quality',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
           const SizedBox(height: 15),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 4,
-                      centerSpaceRadius: 35,
-                      startDegreeOffset: -90,
-                      sections: [
-                        PieChartSectionData(
-                          value: data.sttGood.toDouble(),
-                          color: Colors.cyan,
-                          radius: 25,
-                          showTitle: false,
-                        ),
-                        PieChartSectionData(
-                          value: data.sttLow.toDouble(),
-                          color: Colors.amber,
-                          radius: 25,
-                          showTitle: false,
-                        ),
-                        PieChartSectionData(
-                          value: data.sttFailed.toDouble(),
-                          color: Colors.pinkAccent,
-                          radius: 25,
-                          showTitle: false,
-                        ),
-                      ],
-                    ),
+          SizedBox(
+            height: 180,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 4,
+                centerSpaceRadius: 45,
+                startDegreeOffset: -90,
+                sections: [
+                  PieChartSectionData(
+                    value: data.sttGood.toDouble(),
+                    color: Colors.cyan,
+                    radius: 30,
+                    showTitle: false,
                   ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildIndicator('Good', Colors.cyan, data.sttGood),
-                      _buildIndicator('Low', Colors.amber, data.sttLow),
-                      _buildIndicator('Failed', Colors.pinkAccent, data.sttFailed),
-                    ],
+                  PieChartSectionData(
+                    value: data.sttLow.toDouble(),
+                    color: Colors.amber,
+                    radius: 30,
+                    showTitle: false,
                   ),
-                )
-              ],
+                  PieChartSectionData(
+                    value: data.sttFailed.toDouble(),
+                    color: Colors.pinkAccent,
+                    radius: 30,
+                    showTitle: false,
+                  ),
+                ],
+              ),
             ),
           ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+             _buildHorizontalIndicator('Good', Colors.cyan, data.sttGood),
+             _buildHorizontalIndicator('Low', Colors.amber, data.sttLow),
+             _buildHorizontalIndicator('Failed', Colors.pinkAccent, data.sttFailed),
+            ],
+          )
         ],
       ),
     );
   }
 
-  Widget _buildIndicator(String text, Color color, int value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Container(
-            width: 12, 
-            height: 12,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color,
+  Widget _buildHorizontalIndicator(String text, Color color, int value) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(value.toString(),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(text, style: const TextStyle(fontSize: 14)),
-          const Spacer(),
-          Text(value.toString(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        ],
-      ),
+            const SizedBox(width: 6),
+            Text(text, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          ],
+        )
+      ],
     );
   }
 }
