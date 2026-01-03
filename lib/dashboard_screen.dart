@@ -22,24 +22,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text('Dashboard Overview'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.black87,
-      ),
-      body: FutureBuilder<DashboardData>(
+    return FutureBuilder<DashboardData>(
         future: _dashboardData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Colors.white,));
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
           } else if (!snapshot.hasData ||
               snapshot.data!.totalCalls == 0) {
-            return const Center(child: Text('No call data available for today.'));
+            return const Center(child: Text('No call data available for today.', style: TextStyle(color: Colors.white)));
           } else {
             final data = snapshot.data!;
             return RefreshIndicator(
@@ -49,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 });
               },
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.fromLTRB(20, 100, 20, 20), // Add top padding for the floating app bar
                 child: Column(
                   children: [
                     _buildSummaryCards(data),
@@ -64,8 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           }
         },
-      ),
-    );
+      );
   }
 
   Widget _buildSummaryCards(DashboardData data) {
