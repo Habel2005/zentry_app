@@ -28,10 +28,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: Colors.deepPurple,));
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.black87)));
+            return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData ||
               snapshot.data!.totalCalls == 0) {
-            return const Center(child: Text('No call data available for today.', style: TextStyle(color: Colors.black87)));
+            return const Center(child: Text('No call data available for today.'));
           } else {
             final data = snapshot.data!;
             return RefreshIndicator(
@@ -107,9 +107,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 12),
           Text(value,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black87)),
           const SizedBox(height: 4),
-          Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          Text(title, style: const TextStyle(fontSize: 14, color: Colors.black54)),
         ],
       ),
     );
@@ -179,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                      Text(
                       '${data.aiCalls} Calls',
                       style: const TextStyle(
-                          fontSize: 14, color: Colors.grey),
+                          fontSize: 14, color: Colors.black54),
                     ),
                   ],
                 )
@@ -261,7 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(value.toString(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87)),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -274,7 +274,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(width: 6),
-            Text(text, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+            Text(text, style: const TextStyle(fontSize: 14, color: Colors.black54)),
           ],
         )
       ],
