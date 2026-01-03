@@ -20,10 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        await SupabaseService().signIn(
-          _emailController.text,
-          _passwordController.text,
-        );
+        await SupabaseService().signIn(_emailController.text, _passwordController.text);
         // The auth listener in main.dart will handle navigation
       } on AuthException catch (e) {
         if (mounted) {
@@ -34,10 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('An unexpected error occurred.'),
-              backgroundColor: Colors.red,
-            ),
+            const SnackBar(content: Text('An unexpected error occurred.'), backgroundColor: Colors.red),
           );
         }
       } finally {
@@ -73,10 +67,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withAlpha(25), // Deprecation fix
                       borderRadius: BorderRadius.circular(20.0),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withAlpha(51), // Deprecation fix
                         width: 1.5,
                       ),
                     ),
@@ -87,31 +81,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              'Welcome Back',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                            const Text('Welcome Back', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
                             const SizedBox(height: 8),
-                            Text(
-                              'Sign in to your Zentry account',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white70,
-                              ),
-                            ),
+                            const Text('Sign in to your Zentry account', style: TextStyle(fontSize: 16, color: Colors.white70)),
                             const SizedBox(height: 32),
                             _buildTextField(
                               controller: _emailController,
                               hint: 'Email',
                               icon: Icons.email_outlined,
-                              validator: (value) =>
-                                  (value == null || !value.contains('@'))
-                                  ? 'Please enter a valid email'
-                                  : null,
+                              validator: (value) => (value == null || !value.contains('@')) ? 'Please enter a valid email' : null,
                             ),
                             const SizedBox(height: 16),
                             _buildTextField(
@@ -119,16 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               hint: 'Password',
                               icon: Icons.lock_outline,
                               obscureText: true,
-                              validator: (value) =>
-                                  (value == null || value.isEmpty)
-                                  ? 'Please enter your password'
-                                  : null,
+                              validator: (value) => (value == null || value.isEmpty) ? 'Please enter your password' : null,
                             ),
                             const SizedBox(height: 32),
                             _isLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
+                                ? const CircularProgressIndicator(color: Colors.white,)
                                 : _buildLoginButton(),
                           ],
                         ),
@@ -144,13 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool obscureText = false,
-    FormFieldValidator<String>? validator,
-  }) {
+  Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon, bool obscureText = false, FormFieldValidator<String>? validator}) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
@@ -158,17 +125,17 @@ class _LoginScreenState extends State<LoginScreen> {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white70),
-        prefixIcon: Icon(icon, color: Colors.white70),
+        hintStyle: const TextStyle(color: Colors.white70),
+        prefixIcon: const Icon(Icons.person, color: Colors.white70),
         filled: true,
-        fillColor: Colors.black.withOpacity(0.2),
+        fillColor: Colors.black.withAlpha(51), // Deprecation fix
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.5)),
+          borderSide: BorderSide(color: Colors.white.withAlpha(128)), // Deprecation fix
         ),
       ),
     );
@@ -176,24 +143,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildLoginButton() {
     return Container(
-      decoration: BoxDecoration(
+       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(50),
         gradient: const LinearGradient(
-          colors: [
-            Color(0x66FFFFFF), // milky white
-            Color(0x332196F3), // soft blue tint
-          ],
+          colors: [Color(0xFF8E24AA), Color(0xFF673AB7)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.deepPurple.withAlpha(128), // Deprecation fix
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 5),
-          ),
-        ],
+          )
+        ]
       ),
       child: ElevatedButton(
         onPressed: _signIn,
@@ -202,18 +166,9 @@ class _LoginScreenState extends State<LoginScreen> {
           minimumSize: const Size(double.infinity, 50),
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
         ),
-        child: const Text(
-          'Login',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        child: const Text('Login', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
       ),
     );
   }

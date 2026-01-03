@@ -73,11 +73,10 @@ class _MainScreenState extends State<MainScreen> {
       ),
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), // Adjusted margin for better spacing
         decoration: BoxDecoration(
           color: Colors.white.withAlpha(220), // Light glass effect
           borderRadius: BorderRadius.circular(50),
-          border: Border.all(color: Colors.white.withAlpha(230)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -86,45 +85,43 @@ class _MainScreenState extends State<MainScreen> {
             )
           ]
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(50),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8.0),
-            child: GNav(
-              rippleColor: Colors.grey[200]!,
-              hoverColor: Colors.grey[100]!,
-              gap: 8,
-              activeColor: Colors.deepPurple,
-              iconSize: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: Colors.deepPurple.withAlpha(60), // Light, subtle highlight
-              color: Colors.black54,
-              tabs: const [
-                GButton(
-                  icon: Icons.dashboard_rounded,
-                  text: 'Dashboard',
-                ),
-                GButton(
-                  icon: Icons.history_rounded,
-                  text: 'Logs',
-                ),
-                GButton(
-                  icon: Icons.analytics_rounded,
-                  text: 'Analytics',
-                ),
-                GButton(
-                  icon: Icons.person_rounded,
-                  text: 'Profile',
-                ),
-              ],
-              selectedIndex: _selectedIndex,
-              onTabChange: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-            ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+          child: GNav(
+            mainAxisAlignment: MainAxisAlignment.center, // Key fix for overflow
+            rippleColor: Colors.grey[200]!,
+            hoverColor: Colors.grey[100]!,
+            gap: 8,
+            activeColor: Colors.deepPurple,
+            iconSize: 24,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Adjusted padding
+            duration: const Duration(milliseconds: 400),
+            tabBackgroundColor: Colors.deepPurple.withAlpha(60), // Light, subtle highlight
+            color: Colors.black54,
+            tabs: const [
+              GButton(
+                icon: Icons.dashboard_rounded,
+                text: 'Dashboard',
+              ),
+              GButton(
+                icon: Icons.history_rounded,
+                text: 'Logs',
+              ),
+              GButton(
+                icon: Icons.analytics_rounded,
+                text: 'Analytics',
+              ),
+              GButton(
+                icon: Icons.person_rounded,
+                text: 'Profile',
+              ),
+            ],
+            selectedIndex: _selectedIndex,
+            onTabChange: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
           ),
         ),
       ),

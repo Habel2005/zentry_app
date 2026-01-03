@@ -26,12 +26,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         future: _dashboardData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.white,));
+            return const Center(child: CircularProgressIndicator(color: Colors.deepPurple,));
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
+            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.black87)));
           } else if (!snapshot.hasData ||
               snapshot.data!.totalCalls == 0) {
-            return const Center(child: Text('No call data available for today.', style: TextStyle(color: Colors.white)));
+            return const Center(child: Text('No call data available for today.', style: TextStyle(color: Colors.black87)));
           } else {
             final data = snapshot.data!;
             return RefreshIndicator(
@@ -89,7 +89,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13), // Deprecation fix
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 5),
@@ -100,7 +100,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: color.withOpacity(0.1),
+            backgroundColor: color.withAlpha(25), // Deprecation fix
             radius: 20,
             child: Icon(icon, color: color, size: 20),
           ),
@@ -126,7 +126,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13), // Deprecation fix
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 5),
@@ -197,7 +197,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13), // Deprecation fix
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 5),
