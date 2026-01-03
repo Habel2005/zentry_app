@@ -30,6 +30,13 @@ class _MainScreenState extends State<MainScreen> {
     'Admission Baseline' // Updated title
   ];
 
+  final List<Color> _colors = [
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.red
+  ];
+
   void _onProfileTap() {
     // We will navigate to the AccountSettingsScreen directly
     Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AccountSettingsScreen()));
@@ -59,7 +66,7 @@ class _MainScreenState extends State<MainScreen> {
                   ? const Color(0xFF1A1A1A).withAlpha(200)
                   : Colors.white.withAlpha(200),
               elevation: 0,
-              centerTitle: true,
+              centerTitle: false,
               actions: [
                 Padding(
                   padding: const EdgeInsets.only(right: 12.0),
@@ -106,13 +113,13 @@ class _MainScreenState extends State<MainScreen> {
                 rippleColor: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
                 hoverColor: isDarkMode ? Colors.grey[900]! : Colors.grey[100]!,
                 gap: 8,
-                activeColor: isDarkMode ? Colors.white : Colors.deepPurple,
+                activeColor: _colors[_selectedIndex],
                 iconSize: 24,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 duration: const Duration(milliseconds: 400),
                 tabBackgroundColor: isDarkMode
-                    ? Colors.deepPurple.withAlpha(100)
-                    : Colors.deepPurple.withAlpha(60),
+                    ? _colors[_selectedIndex].withAlpha(100)
+                    : _colors[_selectedIndex].withAlpha(60),
                 color: isDarkMode ? Colors.white70 : Colors.black54,
                 tabs: const [
                   GButton(

@@ -43,6 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 100, 20, 20), // Add top padding for the floating app bar
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildSummaryCards(data),
                     const SizedBox(height: 20),
@@ -134,6 +135,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('AI Handled',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
@@ -205,6 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('STT Quality',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
