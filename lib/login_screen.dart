@@ -146,13 +146,17 @@ class _LoginScreenState extends State<LoginScreen> {
        decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(50),
         gradient: const LinearGradient(
-          colors: [Color(0xFF8E24AA), Color(0xFF673AB7)],
+                    colors: [
+            Color(0x66FFFFFF), // milky white
+            Color(0x332196F3), // soft blue tint
+          ],
+
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.deepPurple.withAlpha(128), // Deprecation fix
+            color: Colors.black.withAlpha(80), // Deprecation fix
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 5),

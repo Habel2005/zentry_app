@@ -79,7 +79,7 @@ class _MainScreenState extends State<MainScreen> {
           borderRadius: BorderRadius.circular(50),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withAlpha(13), // Deprecation fix
               spreadRadius: 2,
               blurRadius: 10,
             )

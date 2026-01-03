@@ -1,25 +1,34 @@
-import 'package:myapp/call_log_screen.dart';
-import 'package:myapp/login_screen.dart';
-import 'package:myapp/main_screen.dart';
-import 'package:myapp/supabase_service.dart';
-import 'package:myapp/theme_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'call_detail_screen.dart';
-
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
-final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
+import 'login_screen.dart';
+import 'main_screen.dart';
+import 'theme_provider.dart'; // Import the new ThemeProvider
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
   await dotenv.load(fileName: ".env");
-  await SupabaseService.initialize();
-  runApp(const MyApp());
+
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+
+  // Disable network fetching for Google Fonts to ensure bundled fonts are used
+  GoogleFonts.config.allowRuntimeFetching = false;
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -27,90 +36,61 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return MaterialApp.router(
-            title: 'Admin Panel',
-            themeMode: themeProvider.themeMode,
-            theme: _buildTheme(Brightness.light),
-            darkTheme: _buildTheme(Brightness.dark),
-            routerConfig: _router,
-          );
-        },
-      ),
-    );
-  }
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
-  ThemeData _buildTheme(Brightness brightness) {
-    final baseTheme = ThemeData(
-      brightness: brightness,
-      useMaterial3: true,
-      colorSchemeSeed: Colors.deepPurple,
+    // Define a common TextTheme
+    final TextTheme appTextTheme = GoogleFonts.poppinsTextTheme(
+      Theme.of(context).textTheme,
     );
 
-    return baseTheme.copyWith(
-      textTheme: GoogleFonts.poppinsTextTheme(baseTheme.textTheme),
+    // Light Theme
+    final ThemeData lightTheme = ThemeData(
+      brightness: Brightness.light,
+      primarySwatch: Colors.deepPurple,
+      scaffoldBackgroundColor: Colors.grey[100],
+      textTheme: appTextTheme,
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+    );
+
+    // Dark Theme
+    final ThemeData darkTheme = ThemeData(
+      brightness: Brightness.dark,
+      primarySwatch: Colors.deepPurple,
+      scaffoldBackgroundColor: const Color(0xFF121212), // A common dark background
+      textTheme: appTextTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+    );
+
+    return MaterialApp(
+      title: 'Zentry',
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeProvider.themeMode,
+      home: const AuthRedirect(),
     );
   }
 }
 
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
-  }
-
-  late final StreamSubscription<dynamic> _subscription;
+class AuthRedirect extends StatelessWidget {
+  const AuthRedirect({super.key});
 
   @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator(color: Colors.deepPurple,)),
+          );
+        }
+
+        if (snapshot.hasData && snapshot.data!.session != null) {
+          return const MainScreen();
+        } else {
+          return const LoginScreen();
+        }
+      },
+    );
   }
 }
-
-final _router = GoRouter(
-  navigatorKey: _rootNavigatorKey,
-  initialLocation: '/',
-  refreshListenable: GoRouterRefreshStream(SupabaseService().authStateChanges),
-  redirect: (BuildContext context, GoRouterState state) {
-    final bool loggedIn = SupabaseService().currentUser != null;
-    final bool loggingIn = state.matchedLocation == '/login';
-
-    if (!loggedIn && !loggingIn) {
-      return '/login';
-    }
-    if (loggedIn && loggingIn) {
-      return '/';
-    }
-    return null;
-  },
-  routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
-    ShellRoute(
-      navigatorKey: _shellNavigatorKey,
-      builder: (context, state, child) {
-        // The MainScreen now acts as the shell for other routes
-        return const MainScreen();
-      },
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => const CallLogScreen(), // Default to call log
-        ),
-        GoRoute(
-          path: '/calls/:id',
-          builder: (context, state) {
-            final id = state.pathParameters['id']!;
-            return CallDetailScreen(callId: id);
-          },
-        ),
-      ],
-    ),
-  ],
-);
