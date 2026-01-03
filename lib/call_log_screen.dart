@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -12,7 +13,6 @@ class CallLogScreen extends StatefulWidget {
 }
 
 class _CallLogScreenState extends State<CallLogScreen> {
-  // State for the PaginatedDataTable
   int _rowsPerPage = PaginatedDataTable.defaultRowsPerPage;
   int? _sortColumnIndex;
   bool _sortAscending = true;
@@ -34,47 +34,95 @@ class _CallLogScreenState extends State<CallLogScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Call History'),
-        // In a real app, you'd have filter actions here
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () { 
-              // TODO: Implement filter dialog
-            },
-            tooltip: 'Filter Calls',
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        setState(() {
+          _dataSource = _CallListDataSource(context);
+        });
+      },
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 100, 20, 20),
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16.0),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDarkMode
+                      ? Colors.black.withOpacity(0.3)
+                      : Colors.white.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(16.0),
+                  border: Border.all(
+                    color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1),
+                  ),
+                ),
+                child: _dataSource == null
+                    ? const Center(child: CircularProgressIndicator())
+                    : Theme(
+                        data: _createDataTableTheme(context, isDarkMode),
+                        child: PaginatedDataTable(
+                          showCheckboxColumn: false,
+                          rowsPerPage: _rowsPerPage,
+                          onRowsPerPageChanged: (int? value) {
+                            setState(() {
+                              _rowsPerPage = value!;
+                            });
+                          },
+                          sortColumnIndex: _sortColumnIndex,
+                          sortAscending: _sortAscending,
+                          columns: _getColumns(),
+                          source: _dataSource!,
+                          columnSpacing: 20,
+                          horizontalMargin: 20,
+                        ),
+                      ),
+              ),
+            ),
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() {
-            // The datasource will automatically refetch
-            _dataSource = _CallListDataSource(context);
-          });
-        },
-        child: SingleChildScrollView(
-          child: _dataSource == null
-              ? const Center(child: CircularProgressIndicator())
-              : PaginatedDataTable(
-                  header: const Text('All Calls'),
-                  rowsPerPage: _rowsPerPage,
-                  onRowsPerPageChanged: (int? value) {
-                    setState(() {
-                      _rowsPerPage = value!;
-                    });
-                  },
-                  sortColumnIndex: _sortColumnIndex,
-                  sortAscending: _sortAscending,
-                  columns: _getColumns(),
-                  source: _dataSource!,
-                ),
-        ),
-      ),
     );
   }
+
+  ThemeData _createDataTableTheme(BuildContext context, bool isDarkMode) {
+  final headingColor = isDarkMode ? Colors.white : Colors.black87;
+  final dataColor = isDarkMode ? Colors.white.withOpacity(0.9) : Colors.black.withOpacity(0.8);
+
+  return Theme.of(context).copyWith(
+    cardColor: Colors.transparent,
+    dividerColor: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.15),
+    dataTableTheme: DataTableThemeData(
+      headingRowHeight: 56,
+      dataRowMinHeight: 55,
+      dataRowMaxHeight: 65,
+      headingTextStyle: TextStyle(
+        fontWeight: FontWeight.bold,
+        color: headingColor,
+        fontFamily: 'Poppins',
+        fontSize: 14,
+      ),
+      dataTextStyle: TextStyle(
+        color: dataColor,
+        fontFamily: 'Poppins',
+        fontWeight: FontWeight.w500,
+      ),
+      headingRowColor: MaterialStateProperty.all(
+        (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1),
+      ),
+      dataRowColor: MaterialStateProperty.resolveWith<Color?>((states) {
+        if (states.contains(MaterialState.hovered)) {
+          return (isDarkMode ? Colors.white : Colors.black).withOpacity(0.08);
+        }
+        return Colors.transparent; // Default row color
+      }),
+      dividerThickness: 1,
+    ),
+  );
+}
+
 
   List<DataColumn> _getColumns() {
     return [
@@ -99,7 +147,7 @@ class _CallLogScreenState extends State<CallLogScreen> {
         label: const Text('STT Quality'),
         onSort: (columnIndex, ascending) => _sort<String>((d) => d.sttQuality, columnIndex, ascending),
       ),
-      const DataColumn(label: Text('Repeat Caller')),
+      const DataColumn(label: Text('Repeat')),
     ];
   }
 }
@@ -141,17 +189,16 @@ class _CallListDataSource extends DataTableSource {
       index: index,
       onSelectChanged: (isSelected) {
         if (isSelected ?? false) {
-          // Navigate to detail page
           GoRouter.of(context).go('/calls/${call.callId}');
         }
       },
       cells: [
         DataCell(Text(DateFormat.yMd().add_jms().format(call.startTime))),
         DataCell(Text(call.duration.toString())),
-        DataCell(Text(call.status)),
+        DataCell(_buildStatusChip(call.status)),
         DataCell(Text(call.language)),
-        DataCell(Text(call.sttQuality)),
-        DataCell(call.isRepeatCaller ? const Icon(Icons.check_circle, color: Colors.green) : const SizedBox()),
+        DataCell(_buildSttQualityIndicator(call.sttQuality)),
+        DataCell(call.isRepeatCaller ? const Icon(Icons.check_circle, color: Colors.teal, size: 20) : const SizedBox()),
       ],
     );
   }
@@ -160,7 +207,7 @@ class _CallListDataSource extends DataTableSource {
   bool get isRowCountApproximate => false;
 
   @override
-  int get rowCount => _loading ? 10 : _calls.length; // Show loading indicators
+  int get rowCount => _loading ? 10 : _calls.length;
 
   @override
   int get selectedRowCount => 0;
@@ -172,5 +219,57 @@ class _CallListDataSource extends DataTableSource {
       return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
     });
     notifyListeners();
+  }
+
+  Widget _buildStatusChip(String status) {
+    Color color;
+    String label;
+    switch (status.toLowerCase()) {
+      case 'completed':
+        color = Colors.green;
+        label = 'Completed';
+        break;
+      case 'dropped':
+        color = Colors.red;
+        label = 'Dropped';
+        break;
+      case 'ongoing':
+        color = Colors.orange;
+        label = 'Ongoing';
+        break;
+      default:
+        color = Colors.grey;
+        label = status;
+    }
+    return Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold));
+  }
+
+  Widget _buildSttQualityIndicator(String quality) {
+    Color color;
+    switch (quality.toLowerCase()) {
+      case 'good':
+        color = Colors.cyan;
+        break;
+      case 'low':
+        color = Colors.amber;
+        break;
+      case 'failed':
+        color = Colors.pinkAccent;
+        break;
+      default:
+        return Text(quality);
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        ),
+        const SizedBox(width: 8),
+        Text(quality),
+      ],
+    );
   }
 }
