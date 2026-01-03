@@ -31,9 +31,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('An error occurred: ${snapshot.error}'));
           } else if (!snapshot.hasData) {
-            return const Center(child: Text('No data available'));
+            return const Center(child: Text('No data to display.'));
           }
 
           final overview = snapshot.data!;

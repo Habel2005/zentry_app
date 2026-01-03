@@ -12,9 +12,9 @@ void main() async {
 
   await dotenv.load(fileName: ".env");
 
-await Supabase.initialize(
-    url: 'https://qulpashxipuajuwxpwar.supabase.co',
-    anonKey: 'sb_publishable_cYUpT-KcS_Yo8exbhIHdXw_tPCGGBsL',
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
   SupabaseService.client = Supabase.instance.client;

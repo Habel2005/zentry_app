@@ -6,7 +6,7 @@ import 'supabase_service.dart';
 class Queries {
   static Future<DashboardOverview> getDashboardOverview() async {
     final response = await SupabaseService.client
-        .from('dashboard_overview')
+        .from('admin_calls_overview')
         .select()
         .single();
 
@@ -14,14 +14,14 @@ class Queries {
   }
 
   static Future<List<CallListItem>> getCallList() async {
-    final response = await SupabaseService.client.from('call_list').select();
+    final response = await SupabaseService.client.from('call_list_view').select();
 
     return (response as List).map((item) => CallListItem.fromJson(item)).toList();
   }
 
   static Future<CallDetail> getCallDetails(String callId) async {
     final response = await SupabaseService.client
-        .from('call_details')
+        .from('call_details_view')
         .select('*, messages:call_messages(*), processing_steps:ai_processing_steps(*)')
         .eq('call_id', callId)
         .single();
