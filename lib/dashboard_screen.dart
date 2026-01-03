@@ -1,66 +1,30 @@
 import 'package:flutter/material.dart';
-import 'models/dashboard_overview.dart';
-import 'queries.dart';
+import 'package:go_router/go_router.dart';
+
 import 'stat_card.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
-
-  @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  Future<DashboardOverview>? _overviewFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _overviewFuture = Queries.getDashboardOverview();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Zentry Insights Dashboard'),
+        title: const Text('Dashboard'),
       ),
-      body: FutureBuilder<DashboardOverview>(
-        future: _overviewFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('An error occurred: ${snapshot.error}'));
-          } else if (!snapshot.hasData) {
-            return const Center(child: Text('No data to display.'));
-          }
-
-          final overview = snapshot.data!;
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              setState(() {
-                _overviewFuture = Queries.getDashboardOverview();
-              });
-            },
-            child: GridView.count(
-              crossAxisCount: 2,
-              padding: const EdgeInsets.all(16.0),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                StatCard(title: 'Total Calls', value: overview.totalCalls.toString()),
-                StatCard(title: 'Ongoing Calls', value: overview.ongoingCalls.toString()),
-                StatCard(title: 'Dropped Calls', value: overview.droppedCalls.toString()),
-                StatCard(
-                    title: 'AI Handled Calls', value: overview.aiHandledCalls.toString()),
-                StatCard(title: 'STT Good', value: overview.sttGood.toString()),
-                StatCard(title: 'STT Low', value: overview.sttLow.toString()),
-              ],
-            ),
-          );
-        },
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 20.0,
+          mainAxisSpacing: 20.0,
+          children: const [
+            StatCard(title: 'Total Calls', value: '1,234', icon: Icons.call),
+            StatCard(title: 'Avg. Call Duration', value: '5:32', icon: Icons.timer),
+            StatCard(title: 'Issues Resolved', value: '95%', icon: Icons.check_circle),
+            StatCard(title: 'Voicemails', value: '12', icon: Icons.voicemail),
+          ],
+        ),
       ),
     );
   }

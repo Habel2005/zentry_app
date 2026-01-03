@@ -8,7 +8,6 @@ class DashboardOverview {
   final int sttGood;
   final int sttLow;
   final int sttFailed;
-  final int aiHandledCalls;
 
   DashboardOverview({
     required this.day,
@@ -20,21 +19,19 @@ class DashboardOverview {
     required this.sttGood,
     required this.sttLow,
     required this.sttFailed,
-    required this.aiHandledCalls,
   });
 
   factory DashboardOverview.fromJson(Map<String, dynamic> json) {
     return DashboardOverview(
       day: DateTime.parse(json['day']),
-      totalCalls: json['total_calls'],
-      ongoingCalls: json['ongoing_calls'],
-      droppedCalls: json['dropped_calls'],
-      aiCalls: json['ai_calls'],
-      humanCalls: json['human_calls'],
-      sttGood: json['stt_good'],
-      sttLow: json['stt_low'],
-      sttFailed: json['stt_failed'],
-      aiHandledCalls: json['ai_handled_calls'],
+      totalCalls: json['total_calls'] ?? 0,
+      ongoingCalls: json['ongoing_calls'] ?? 0,
+      droppedCalls: json['dropped_calls'] ?? 0,
+      aiCalls: json['ai_calls'] ?? 0,
+      humanCalls: json['human_calls'] ?? 0,
+      sttGood: json['stt_good'] ?? 0,
+      sttLow: json['stt_low'] ?? 0,
+      sttFailed: json['stt_failed'] ?? 0,
     );
   }
 }

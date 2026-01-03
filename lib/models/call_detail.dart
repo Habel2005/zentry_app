@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class CallDetail {
   final String callId;
   final DateTime callStartTime;
@@ -19,22 +21,54 @@ class CallDetail {
     required this.processingSteps,
   });
 
-  factory CallDetail.fromJson(Map<String, dynamic> json) {
+  factory CallDetail.fromJson(List<dynamic> jsonList) {
+    if (jsonList.isEmpty) {
+      throw Exception("Cannot create CallDetail from empty list");
+    }
+
+    // Aggregate data from the list of rows from the view
+    final firstRow = jsonList.first;
+    final callId = firstRow['call_id'];
+    final callStartTime = DateTime.parse(firstRow['call_start_time']);
+    final callEndTime = firstRow['call_end_time'] != null
+        ? DateTime.parse(firstRow['call_end_time'])
+        : null;
+    final callStatus = firstRow['call_status'];
+    final languageDetected = firstRow['language_detected'];
+    final sttQuality = firstRow['stt_quality'];
+
+    final messages = <CallMessage>[];
+    final processingSteps = <AiProcessingStep>[];
+    final messageIds = <String>{}; // To avoid duplicate messages
+    final stepIds = <String>{}; // To avoid duplicate steps
+
+    for (var row in jsonList) {
+      if (row['message_time'] != null && !messageIds.contains(row['message_time'])) {
+        messages.add(CallMessage.fromJson(row));
+        messageIds.add(row['message_time']);
+      }
+      if (row['step_type'] != null) {
+        // Assuming step_type and message_time can be used to uniquely identify a step
+        final stepId = '${row['step_type']}_${row['message_time']}';
+         if (!stepIds.contains(stepId)) {
+            processingSteps.add(AiProcessingStep.fromJson(row));
+            stepIds.add(stepId);
+        }
+      }
+    }
+    
+    // Sort messages and steps by time
+    messages.sort((a, b) => a.messageTime.compareTo(b.messageTime));
+
     return CallDetail(
-      callId: json['call_id'],
-      callStartTime: DateTime.parse(json['call_start_time']),
-      callEndTime: json['call_end_time'] != null
-          ? DateTime.parse(json['call_end_time'])
-          : null,
-      callStatus: json['call_status'],
-      languageDetected: json['language_detected'],
-      sttQuality: json['stt_quality'],
-      messages: (json['messages'] as List)
-          .map((item) => CallMessage.fromJson(item))
-          .toList(),
-      processingSteps: (json['processing_steps'] as List)
-          .map((item) => AiProcessingStep.fromJson(item))
-          .toList(),
+      callId: callId,
+      callStartTime: callStartTime,
+      callEndTime: callEndTime,
+      callStatus: callStatus,
+      languageDetected: languageDetected,
+      sttQuality: sttQuality,
+      messages: messages,
+      processingSteps: processingSteps,
     );
   }
 }
@@ -65,17 +99,6 @@ class CallMessage {
       messageTime: DateTime.parse(json['message_time']),
     );
   }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CallMessage &&
-          runtimeType == other.runtimeType &&
-          messageTime == other.messageTime &&
-          speaker == other.speaker;
-
-  @override
-  int get hashCode => messageTime.hashCode ^ speaker.hashCode;
 }
 
 class AiProcessingStep {
@@ -96,14 +119,4 @@ class AiProcessingStep {
       latencyMs: json['latency_ms'],
     );
   }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AiProcessingStep &&
-          runtimeType == other.runtimeType &&
-          stepType == other.stepType;
-
-  @override
-  int get hashCode => stepType.hashCode;
 }

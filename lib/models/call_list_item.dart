@@ -7,8 +7,6 @@ class CallListItem {
   final String? languageDetected;
   final String? sttQuality;
   final bool isRepeatCaller;
-  final String? language;
-  final String? duration;
 
   CallListItem({
     required this.callId,
@@ -19,8 +17,6 @@ class CallListItem {
     this.languageDetected,
     this.sttQuality,
     required this.isRepeatCaller,
-    this.language,
-    this.duration,
   });
 
   factory CallListItem.fromJson(Map<String, dynamic> json) {
@@ -34,9 +30,7 @@ class CallListItem {
       callStatus: json['call_status'],
       languageDetected: json['language_detected'],
       sttQuality: json['stt_quality'],
-      isRepeatCaller: json['is_repeat_caller'],
-      language: json['language'],
-      duration: json['duration'],
+      isRepeatCaller: json['is_repeat_caller'] ?? false,
     );
   }
 }

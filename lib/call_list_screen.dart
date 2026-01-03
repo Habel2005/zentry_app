@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart' hide Badge;
-import 'badge.dart';
-import 'call_detail_screen.dart';
-import 'models/call_list_item.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
 import 'queries.dart';
-import 'theme.dart';
+import 'models/call_list_item.dart';
 
 class CallListScreen extends StatefulWidget {
   const CallListScreen({super.key});
@@ -13,7 +13,7 @@ class CallListScreen extends StatefulWidget {
 }
 
 class _CallListScreenState extends State<CallListScreen> {
-  Future<List<CallListItem>>? _callListFuture;
+  late Future<List<CallListItem>> _callListFuture;
 
   @override
   void initState() {
@@ -21,7 +21,7 @@ class _CallListScreenState extends State<CallListScreen> {
     _callListFuture = Queries.getCallList();
   }
 
-  void _refreshCallList() {
+  Future<void> _refreshCallList() async {
     setState(() {
       _callListFuture = Queries.getCallList();
     });
@@ -32,12 +32,10 @@ class _CallListScreenState extends State<CallListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Call History'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshCallList,
-          ),
-        ],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/'),
+        ),
       ),
       body: FutureBuilder<List<CallListItem>>(
         future: _callListFuture,
@@ -47,42 +45,35 @@ class _CallListScreenState extends State<CallListScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No calls found'));
+            return const Center(child: Text('No calls found.'));
           }
 
-          final calls = snapshot.data!;
+          final callList = snapshot.data!;
 
-          return ListView.builder(
-            itemCount: calls.length,
-            itemBuilder: (context, index) {
-              final call = calls[index];
-              return ListTile(
-                title: Text('Call ID: ${call.callId}'),
-                subtitle: Text(
-                    '${call.callStartTime} - ${call.duration ?? 'Ongoing'} - ${call.language}'),
-                trailing: Wrap(
-                  spacing: 8.0,
-                  children: [
-                    if (call.isRepeatCaller)
-                      const Chip(label: Text('Repeat')),
-                    Badge(
-                      text: call.callStatus,
-                      color: call.callStatus == 'completed'
-                          ? Colors.green
-                          : AppTheme.red,
+          return RefreshIndicator(
+            onRefresh: _refreshCallList,
+            child: ListView.builder(
+              itemCount: callList.length,
+              itemBuilder: (context, index) {
+                final call = callList[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      child: Text((index + 1).toString()),
                     ),
-                  ],
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CallDetailScreen(callId: call.callId),
+                    title: Text('Call ID: ${call.callId}'),
+                    subtitle: Text(
+                      'Started: ${DateFormat.yMd().add_Hms().format(call.callStartTime)}\n'
+                      'Status: ${call.callStatus} - ${call.sttQuality ?? 'N/A'}'
                     ),
-                  );
-                },
-              );
-            },
+                    trailing: const Icon(Icons.chevron_right),
+                    isThreeLine: true,
+                    onTap: () => context.go('/calls/${call.callId}'),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

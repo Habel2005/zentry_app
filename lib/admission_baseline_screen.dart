@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 class AdmissionBaselineScreen extends StatelessWidget {
@@ -7,10 +8,10 @@ class AdmissionBaselineScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admission Baseline'),
+        title: const Text('Admission Baselines'),
       ),
       body: const Center(
-        child: Text('This feature is not yet available'),
+        child: Text('Admission Baselines - Coming Soon!'),
       ),
     );
   }
