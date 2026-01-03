@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'models/admin_calls_overview.dart';
+import 'models/dashboard_data.dart';
 import 'models/call_detail.dart';
 import 'models/admin_call_list.dart';
 
@@ -47,16 +47,18 @@ class SupabaseService {
     await client.auth.signOut();
   }
 
-  Future<AdminCallsOverview> getCallsOverview() async {
+  Future<DashboardData> getDashboardData() async {
     try {
       final response = await client
           .from('admin_calls_overview')
           .select()
+          .order('day', ascending: false)
+          .limit(1)
           .single();
-      return AdminCallsOverview.fromJson(response);
+      return DashboardData.fromJson(response);
     } catch (e) {
-      log('Error fetching calls overview: $e');
-      rethrow;
+      log('Error fetching dashboard data: $e');
+      return DashboardData(totalCalls: 0, ongoingCalls: 0, droppedCalls: 0, aiCalls: 0, humanCalls: 0, sttGood: 0, sttLow: 0, sttFailed: 0);
     }
   }
   
