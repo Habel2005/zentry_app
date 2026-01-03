@@ -1,10 +1,9 @@
+
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'supabase_service.dart';
 
 import 'dashboard_screen.dart';
-import 'call_list_screen.dart';
-import 'caller_overview_screen.dart';
-import 'admission_baseline_screen.dart';
+import 'call_log_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -18,10 +17,22 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const DashboardScreen(),
-    const CallListScreen(),
-    const CallerOverviewScreen(),
-    const AdmissionBaselineScreen(),
+    const CallLogScreen(),
+    // Add other main screens here
   ];
+
+  Future<void> _signOut() async {
+    try {
+      await SupabaseService().signOut();
+      // The auth listener in main will handle navigation to the login screen.
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +41,13 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           NavigationRail(
             selectedIndex: _selectedIndex,
-            onDestinationSelected: (int index) {
+            onDestinationSelected: (index) {
               setState(() {
                 _selectedIndex = index;
               });
             },
             labelType: NavigationRailLabelType.all,
-            destinations: const <NavigationRailDestination>[
+            destinations: const [
               NavigationRailDestination(
                 icon: Icon(Icons.dashboard_outlined),
                 selectedIcon: Icon(Icons.dashboard),
@@ -47,22 +58,23 @@ class _MainScreenState extends State<MainScreen> {
                 selectedIcon: Icon(Icons.call),
                 label: Text('Calls'),
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person),
-                label: Text('Callers'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.rule_outlined),
-                selectedIcon: Icon(Icons.rule),
-                label: Text('Baselines'),
-              ),
             ],
+            trailing: Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: IconButton(
+                    icon: const Icon(Icons.logout),
+                    tooltip: 'Logout',
+                    onPressed: _signOut,
+                  ),
+                ),
+              ),
+            ),
           ),
           const VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: _screens[_selectedIndex],
-          ),
+          Expanded(child: _screens[_selectedIndex]),
         ],
       ),
     );

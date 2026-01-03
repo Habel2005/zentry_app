@@ -1,122 +1,51 @@
-import 'package:flutter/foundation.dart';
+
 
 class CallDetail {
   final String callId;
-  final DateTime callStartTime;
-  final DateTime? callEndTime;
+  final DateTime startTime;
+  final DateTime? endTime;
   final String callStatus;
-  final String? languageDetected;
-  final String? sttQuality;
-  final List<CallMessage> messages;
-  final List<AiProcessingStep> processingSteps;
+  final String language;
+  final String? summary;
+  final List<TranscriptItem> transcript;
 
   CallDetail({
     required this.callId,
-    required this.callStartTime,
-    this.callEndTime,
+    required this.startTime,
+    this.endTime,
     required this.callStatus,
-    this.languageDetected,
-    this.sttQuality,
-    required this.messages,
-    required this.processingSteps,
+    required this.language,
+    this.summary,
+    required this.transcript,
   });
 
-  factory CallDetail.fromJson(List<dynamic> jsonList) {
-    if (jsonList.isEmpty) {
-      throw Exception("Cannot create CallDetail from empty list");
-    }
-
-    // Aggregate data from the list of rows from the view
-    final firstRow = jsonList.first;
-    final callId = firstRow['call_id'];
-    final callStartTime = DateTime.parse(firstRow['call_start_time']);
-    final callEndTime = firstRow['call_end_time'] != null
-        ? DateTime.parse(firstRow['call_end_time'])
-        : null;
-    final callStatus = firstRow['call_status'];
-    final languageDetected = firstRow['language_detected'];
-    final sttQuality = firstRow['stt_quality'];
-
-    final messages = <CallMessage>[];
-    final processingSteps = <AiProcessingStep>[];
-    final messageIds = <String>{}; // To avoid duplicate messages
-    final stepIds = <String>{}; // To avoid duplicate steps
-
-    for (var row in jsonList) {
-      if (row['message_time'] != null && !messageIds.contains(row['message_time'])) {
-        messages.add(CallMessage.fromJson(row));
-        messageIds.add(row['message_time']);
-      }
-      if (row['step_type'] != null) {
-        // Assuming step_type and message_time can be used to uniquely identify a step
-        final stepId = '${row['step_type']}_${row['message_time']}';
-         if (!stepIds.contains(stepId)) {
-            processingSteps.add(AiProcessingStep.fromJson(row));
-            stepIds.add(stepId);
-        }
-      }
-    }
-    
-    // Sort messages and steps by time
-    messages.sort((a, b) => a.messageTime.compareTo(b.messageTime));
-
+  factory CallDetail.fromJson(Map<String, dynamic> json) {
     return CallDetail(
-      callId: callId,
-      callStartTime: callStartTime,
-      callEndTime: callEndTime,
-      callStatus: callStatus,
-      languageDetected: languageDetected,
-      sttQuality: sttQuality,
-      messages: messages,
-      processingSteps: processingSteps,
+      callId: json['call_id'] as String,
+      startTime: DateTime.parse(json['call_start_time'] as String),
+      endTime: json['call_end_time'] != null ? DateTime.parse(json['call_end_time'] as String) : null,
+      callStatus: json['call_status'] as String,
+      language: json['language'] as String,
+      summary: json['summary'] as String?,
+      transcript: (json['transcript'] as List<dynamic>? ?? [])
+          .map((item) => TranscriptItem.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
 
-class CallMessage {
+class TranscriptItem {
   final String speaker;
-  final String rawText;
-  final String? normalizedText;
-  final double? sttConfidence;
-  final DateTime messageTime;
+  final String text;
+  final Duration timestamp;
 
-  CallMessage({
-    required this.speaker,
-    required this.rawText,
-    this.normalizedText,
-    this.sttConfidence,
-    required this.messageTime,
-  });
+  TranscriptItem({required this.speaker, required this.text, required this.timestamp});
 
-  factory CallMessage.fromJson(Map<String, dynamic> json) {
-    return CallMessage(
-      speaker: json['speaker'],
-      rawText: json['raw_text'],
-      normalizedText: json['normalized_text'],
-      sttConfidence: json['stt_confidence'] != null
-          ? (json['stt_confidence'] as num).toDouble()
-          : null,
-      messageTime: DateTime.parse(json['message_time']),
-    );
-  }
-}
-
-class AiProcessingStep {
-  final String stepType;
-  final String stepStatus;
-  final int? latencyMs;
-
-  AiProcessingStep({
-    required this.stepType,
-    required this.stepStatus,
-    this.latencyMs,
-  });
-
-  factory AiProcessingStep.fromJson(Map<String, dynamic> json) {
-    return AiProcessingStep(
-      stepType: json['step_type'],
-      stepStatus: json['step_status'],
-      latencyMs: json['latency_ms'],
+  factory TranscriptItem.fromJson(Map<String, dynamic> json) {
+    return TranscriptItem(
+      speaker: json['speaker'] as String,
+      text: json['text'] as String,
+      timestamp: Duration(seconds: (json['timestamp'] as num).toInt()),
     );
   }
 }

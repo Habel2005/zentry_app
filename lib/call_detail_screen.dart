@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
-import 'queries.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'supabase_service.dart';
 import 'models/call_detail.dart';
+import 'transcript_tile.dart';
 
 class CallDetailScreen extends StatefulWidget {
   final String callId;
-
   const CallDetailScreen({super.key, required this.callId});
 
   @override
@@ -15,12 +14,12 @@ class CallDetailScreen extends StatefulWidget {
 }
 
 class _CallDetailScreenState extends State<CallDetailScreen> {
-  late Future<CallDetail> _callDetailFuture;
+  late Future<CallDetail?> _callDetailFuture;
 
   @override
   void initState() {
     super.initState();
-    _callDetailFuture = Queries.getCallDetails(widget.callId);
+    _callDetailFuture = SupabaseService().getCallDetails(widget.callId);
   }
 
   @override
@@ -29,33 +28,112 @@ class _CallDetailScreenState extends State<CallDetailScreen> {
       appBar: AppBar(
         title: Text('Call Details'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/calls'),
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: FutureBuilder<CallDetail>(
+      body: FutureBuilder<CallDetail?>(
         future: _callDetailFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
+          }
+          if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData) {
-            return const Center(child: Text('Call details not found.'));
+          }
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: Text('Call not found.'));
           }
 
           final callDetail = snapshot.data!;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSummaryCard(callDetail),
-                const SizedBox(height: 24),
-                _buildMessagesSection(callDetail.messages),
-                const SizedBox(height: 24),
-                _buildProcessingStepsSection(callDetail.processingSteps),
+                // Main content
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Call Summary',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withAlpha(25),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Text(callDetail.summary ?? 'No summary available.'),
+                      ),
+                      const SizedBox(height: 32),
+                      Text(
+                        'Transcript',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      if (callDetail.transcript.isEmpty)
+                        const Text('No transcript available.')
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: callDetail.transcript.length,
+                          itemBuilder: (context, index) {
+                            final item = callDetail.transcript[index];
+                            return TranscriptTile(
+                              speaker: item.speaker,
+                              text: item.text,
+                              timestamp: item.timestamp,
+                              isPrimarySpeaker: item.speaker == 'user', // Example logic
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 24),
+
+                // Right sidebar
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    padding: const EdgeInsets.all(20.0),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Details',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const Divider(height: 24),
+                        _buildDetailRow('Call ID', callDetail.callId, context),
+                        _buildDetailRow('Start Time', DateFormat.yMMMd().add_jms().format(callDetail.startTime), context),
+                        _buildDetailRow('End Time', callDetail.endTime != null ? DateFormat.yMMMd().add_jms().format(callDetail.endTime!) : 'N/A', context),
+                        _buildDetailRow('Status', callDetail.callStatus, context),
+                        _buildDetailRow('Language', callDetail.language, context),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -64,134 +142,17 @@ class _CallDetailScreenState extends State<CallDetailScreen> {
     );
   }
 
-  Widget _buildSummaryCard(CallDetail detail) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Call Summary', style: Theme.of(context).textTheme.titleLarge),
-            const Divider(height: 20),
-            _buildSummaryRow('Call ID:', detail.callId),
-            _buildSummaryRow('Start Time:', DateFormat.yMd().add_Hms().format(detail.callStartTime)),
-            _buildSummaryRow('End Time:', detail.callEndTime != null ? DateFormat.yMd().add_Hms().format(detail.callEndTime!) : 'N/A'),
-            _buildSummaryRow('Status:', detail.callStatus),
-            _buildSummaryRow('Language:', detail.languageDetected ?? 'N/A'),
-            _buildSummaryRow('STT Quality:', detail.sttQuality ?? 'N/A'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(String title, String value) {
+  Widget _buildDetailRow(String title, String value, BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
-          Text(value, style: Theme.of(context).textTheme.bodyMedium),
+          Text(title, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+          const SizedBox(height: 2),
+          Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
         ],
       ),
-    );
-  }
-
-  Widget _buildMessagesSection(List<CallMessage> messages) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Conversation Log', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
-        ...messages.map((msg) => _buildMessageBubble(msg)).toList(),
-      ],
-    );
-  }
-
-  Widget _buildMessageBubble(CallMessage message) {
-    bool isAi = message.speaker.toLowerCase() == 'ai';
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5.0),
-      child: Row(
-        mainAxisAlignment: isAi ? MainAxisAlignment.start : MainAxisAlignment.end,
-        children: [
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
-              decoration: BoxDecoration(
-                color: isAi ? Colors.grey.shade200 : Theme.of(context).primaryColorLight,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20.0),
-                  topRight: const Radius.circular(20.0),
-                  bottomLeft: isAi ? const Radius.circular(0) : const Radius.circular(20.0),
-                  bottomRight: isAi ? const Radius.circular(20.0) : const Radius.circular(0),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${message.speaker} at ${DateFormat.Hms().format(message.messageTime)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(message.rawText),
-                  if (message.sttConfidence != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        'Confidence: ${(message.sttConfidence! * 100).toStringAsFixed(1)}%',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProcessingStepsSection(List<AiProcessingStep> steps) {
-    if (steps.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('AI Processing Steps', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
-        Table(
-          border: TableBorder.all(color: Colors.grey.shade300),
-          columnWidths: const {
-            0: FlexColumnWidth(2),
-            1: FlexColumnWidth(1),
-            2: FlexColumnWidth(1),
-          },
-          children: [
-            const TableRow(
-              decoration: BoxDecoration(color: Colors.black12),
-              children: [
-                Padding(padding: EdgeInsets.all(8.0), child: Text('Step', style: TextStyle(fontWeight: FontWeight.bold))),
-                Padding(padding: EdgeInsets.all(8.0), child: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-                Padding(padding: EdgeInsets.all(8.0), child: Text('Latency (ms)', style: TextStyle(fontWeight: FontWeight.bold))),
-              ],
-            ),
-            ...steps.map((step) => TableRow(
-              children: [
-                Padding(padding: const EdgeInsets.all(8.0), child: Text(step.stepType)),
-                Padding(padding: const EdgeInsets.all(8.0), child: Text(step.stepStatus)),
-                Padding(padding: const EdgeInsets.all(8.0), child: Text(step.latencyMs?.toString() ?? 'N/A')),
-              ],
-            )).toList(),
-          ],
-        ),
-      ],
     );
   }
 }

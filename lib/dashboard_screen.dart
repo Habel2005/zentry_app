@@ -1,98 +1,103 @@
 
 import 'package:flutter/material.dart';
+import '../models/admin_calls_overview.dart';
+import '../supabase_service.dart';
 import 'stat_card.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late final Future<AdminCallsOverview> _overviewFuture;
+  final SupabaseService _supabaseService = SupabaseService();
+
+  @override
+  void initState() {
+    super.initState();
+    _overviewFuture = _supabaseService.getCallsOverview();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.black87,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Key Metrics',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 16.0),
-            Wrap(
-              spacing: 16.0,
-              runSpacing: 16.0,
-              children: const [
-                StatCard(
-                  title: 'Total Calls',
-                  value: '1,234',
-                  icon: Icons.call,
-                  iconColor: Colors.blue,
+      body: FutureBuilder<AdminCallsOverview>(
+        future: _overviewFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error loading data: ${snapshot.error}',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            );
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(child: Text('No data available.'));
+          }
+
+          final overview = snapshot.data!;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Key Metrics',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                StatCard(
-                  title: 'Avg. Call Duration',
-                  value: '5:32',
-                  icon: Icons.timer,
-                  iconColor: Colors.green,
+                const SizedBox(height: 16.0),
+                Wrap(
+                  spacing: 16.0,
+                  runSpacing: 16.0,
+                  children: [
+                    StatCard(
+                      title: 'Total Calls',
+                      value: overview.totalCalls.toString(),
+                      icon: Icons.call,
+                      iconColor: Colors.blue,
+                    ),
+                    StatCard(
+                      title: 'Ongoing Calls',
+                      value: overview.ongoingCalls.toString(),
+                      icon: Icons.phone_in_talk,
+                      iconColor: Colors.green,
+                    ),
+                    StatCard(
+                      title: 'Dropped Calls',
+                      value: overview.droppedCalls.toString(),
+                      icon: Icons.call_missed_outgoing,
+                      iconColor: Colors.red,
+                    ),
+                    StatCard(
+                      title: 'AI Handled Ratio',
+                      value: '${(overview.aiVsHumanRatio * 100).toStringAsFixed(1)}%',
+                      icon: Icons.android,
+                      iconColor: Colors.purple,
+                    ),
+                  ],
                 ),
-                StatCard(
-                  title: 'Issues Resolved',
-                  value: '95%',
-                  icon: Icons.check_circle,
-                  iconColor: Colors.purple,
-                ),
-                StatCard(
-                  title: 'Voicemails',
-                  value: '12',
-                  icon: Icons.voicemail,
-                  iconColor: Colors.orange,
-                ),
+                const SizedBox(height: 32.0),
+                // ... The rest of your UI, including the chart placeholder ...
               ],
             ),
-            const SizedBox(height: 32.0),
-            Text(
-              'Call Volume Over Time',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 16.0),
-            Card(
-              elevation: 2.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              child: Container(
-                height: 250,
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.bar_chart,
-                        size: 50,
-                        color: Colors.grey[300],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Chart will be displayed here',
-                        style: TextStyle(color: Colors.grey[500]),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
