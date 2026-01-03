@@ -19,8 +19,8 @@ class AdminCallList {
 
   factory AdminCallList.fromJson(Map<String, dynamic> json) {
     return AdminCallList(
-      callId: json['call_id'] as String,
-      startTime: DateTime.parse(json['start_time'] as String),
+      callId: json['call_id'] as String? ?? 'N/A',
+      startTime: json['start_time'] != null ? DateTime.parse(json['start_time'] as String) : DateTime.now(),
       duration: (json['duration'] as num?)?.toInt() ?? 0,
       status: json['status'] as String? ?? 'Unknown',
       language: json['language'] as String? ?? 'N/A',
