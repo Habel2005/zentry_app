@@ -6,21 +6,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'login_screen.dart';
 import 'main_screen.dart';
-import 'theme_provider.dart'; // Import the new ThemeProvider
+import 'theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load environment variables
   await dotenv.load(fileName: ".env");
-
-  // Initialize Supabase
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-
-  // Disable network fetching for Google Fonts to ensure bundled fonts are used
   GoogleFonts.config.allowRuntimeFetching = false;
 
   runApp(
@@ -37,28 +31,65 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    const primarySeedColor = Colors.deepPurple;
 
-    // Define a common TextTheme
-    final TextTheme appTextTheme = GoogleFonts.poppinsTextTheme(
-      Theme.of(context).textTheme,
-    );
+    // Define a common TextTheme for consistency
+    final appTextTheme = GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme);
 
-    // Light Theme
+    // --- Modern Light Theme ---
     final ThemeData lightTheme = ThemeData(
+      useMaterial3: true,
       brightness: Brightness.light,
-      primarySwatch: Colors.deepPurple,
-      scaffoldBackgroundColor: Colors.grey[100],
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primarySeedColor,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: const Color(0xFFF5F5F7), // A clean, Apple-like light gray
       textTheme: appTextTheme,
-      visualDensity: VisualDensity.adaptivePlatformDensity,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.white.withAlpha(200),
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        titleTextStyle: appTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: primarySeedColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+      ),
     );
 
-    // Dark Theme
+    // --- Modern Dark Theme ---
     final ThemeData darkTheme = ThemeData(
+      useMaterial3: true,
       brightness: Brightness.dark,
-      primarySwatch: Colors.deepPurple,
-      scaffoldBackgroundColor: const Color(0xFF121212), // A common dark background
-      textTheme: appTextTheme.apply(bodyColor: Colors.white, displayColor: Colors.white),
-      visualDensity: VisualDensity.adaptivePlatformDensity,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primarySeedColor,
+        brightness: Brightness.dark,
+        background: const Color(0xFF121212), // Deep, rich dark background
+      ),
+      scaffoldBackgroundColor: const Color(0xFF000000), // Pure black for a sleek feel
+      textTheme: appTextTheme.apply(bodyColor: Colors.white70, displayColor: Colors.white),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF1A1A1A).withAlpha(200),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        titleTextStyle: appTextTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: primarySeedColor.shade300,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+      ),
     );
 
     return MaterialApp(
@@ -67,6 +98,7 @@ class MyApp extends StatelessWidget {
       darkTheme: darkTheme,
       themeMode: themeProvider.themeMode,
       home: const AuthRedirect(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -84,7 +116,6 @@ class AuthRedirect extends StatelessWidget {
             body: Center(child: CircularProgressIndicator(color: Colors.deepPurple,)),
           );
         }
-
         if (snapshot.hasData && snapshot.data!.session != null) {
           return const MainScreen();
         } else {

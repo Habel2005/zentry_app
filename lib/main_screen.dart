@@ -19,27 +19,28 @@ class _MainScreenState extends State<MainScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
     CallLogScreen(),
-    ComingSoonScreen(pageTitle: 'Analytics'),
-    AccountSettingsScreen(),
+    ComingSoonScreen(pageTitle: 'Caller Overview'), // Updated page title
+    ComingSoonScreen(pageTitle: 'Admission Baseline'), // Updated page title
   ];
 
   final List<String> _titles = [
     'Dashboard Overview',
     'Call History',
-    'Analytics',
-    'My Profile' // Changed for the settings screen
+    'Caller Overview', // Updated title
+    'Admission Baseline' // Updated title
   ];
 
   void _onProfileTap() {
-    setState(() {
-      _selectedIndex = 3;
-    });
+    // We will navigate to the AccountSettingsScreen directly
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AccountSettingsScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(56.0),
@@ -49,9 +50,14 @@ class _MainScreenState extends State<MainScreen> {
             child: AppBar(
               title: Text(
                 _titles[_selectedIndex],
-                style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              backgroundColor: Colors.white.withAlpha(200), // Light glass effect
+              backgroundColor: isDarkMode
+                  ? const Color(0xFF1A1A1A).withAlpha(200)
+                  : Colors.white.withAlpha(200),
               elevation: 0,
               centerTitle: true,
               actions: [
@@ -73,55 +79,67 @@ class _MainScreenState extends State<MainScreen> {
       ),
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), // Adjusted margin for better spacing
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(220), // Light glass effect
+          color: isDarkMode
+              ? const Color(0xFF1A1A1A).withOpacity(0.8)
+              : Colors.white.withOpacity(0.8),
           borderRadius: BorderRadius.circular(50),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(13), // Deprecation fix
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.25)
+                  : Colors.black.withOpacity(0.1),
               spreadRadius: 2,
               blurRadius: 10,
             )
-          ]
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-          child: GNav(
-            mainAxisAlignment: MainAxisAlignment.center, // Key fix for overflow
-            rippleColor: Colors.grey[200]!,
-            hoverColor: Colors.grey[100]!,
-            gap: 8,
-            activeColor: Colors.deepPurple,
-            iconSize: 24,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Adjusted padding
-            duration: const Duration(milliseconds: 400),
-            tabBackgroundColor: Colors.deepPurple.withAlpha(60), // Light, subtle highlight
-            color: Colors.black54,
-            tabs: const [
-              GButton(
-                icon: Icons.dashboard_rounded,
-                text: 'Dashboard',
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(50),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              child: GNav(
+                mainAxisAlignment: MainAxisAlignment.center,
+                rippleColor: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+                hoverColor: isDarkMode ? Colors.grey[900]! : Colors.grey[100]!,
+                gap: 8,
+                activeColor: isDarkMode ? Colors.white : Colors.deepPurple,
+                iconSize: 24,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                duration: const Duration(milliseconds: 400),
+                tabBackgroundColor: isDarkMode
+                    ? Colors.deepPurple.withAlpha(100)
+                    : Colors.deepPurple.withAlpha(60),
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                tabs: const [
+                  GButton(
+                    icon: Icons.dashboard_rounded,
+                    text: 'Dashboard',
+                  ),
+                  GButton(
+                    icon: Icons.history_rounded,
+                    text: 'Logs',
+                  ),
+                  GButton(
+                    icon: Icons.analytics_outlined, // Updated icon
+                    text: 'Overview', // Updated text
+                  ),
+                  GButton(
+                    icon: Icons.show_chart_rounded, // Updated icon
+                    text: 'Baseline', // Updated text
+                  ),
+                ],
+                selectedIndex: _selectedIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
               ),
-              GButton(
-                icon: Icons.history_rounded,
-                text: 'Logs',
-              ),
-              GButton(
-                icon: Icons.analytics_rounded,
-                text: 'Analytics',
-              ),
-              GButton(
-                icon: Icons.person_rounded,
-                text: 'Profile',
-              ),
-            ],
-            selectedIndex: _selectedIndex,
-            onTabChange: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
+            ),
           ),
         ),
       ),
