@@ -36,62 +36,36 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryColor = Color(0xFF6200EE);
-    const Color primaryVariantColor = Color(0xFF3700B3);
-    const Color secondaryColor = Color(0xFF03DAC6);
-    const Color surfaceColor = Colors.white;
-    const Color backgroundColor = Color(0xFFF2F2F2);
-    const Color errorColor = Color(0xFFB00020);
-
-    final TextTheme appTextTheme = TextTheme(
-      displayLarge: GoogleFonts.montserrat(fontSize: 57, fontWeight: FontWeight.bold),
-      titleLarge: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.w500),
-      bodyMedium: GoogleFonts.roboto(fontSize: 14),
-    );
-
-    final ThemeData theme = ThemeData(
-      useMaterial3: true,
-      colorScheme: const ColorScheme(
-        primary: primaryColor,
-        primaryContainer: primaryVariantColor,
-        secondary: secondaryColor,
-        surface: surfaceColor,
-        background: backgroundColor,
-        error: errorColor,
-        onPrimary: Colors.white,
-        onSecondary: Colors.black,
-        onSurface: Colors.black,
-        onBackground: Colors.black,
-        onError: Colors.white,
-        brightness: Brightness.light,
-      ),
-      textTheme: appTextTheme,
-      appBarTheme: AppBarTheme(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        titleTextStyle: GoogleFonts.montserrat(fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: primaryColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          textStyle: GoogleFonts.lato(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-      ),
-      navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: surfaceColor,
-        selectedIconTheme: const IconThemeData(color: primaryColor),
-        unselectedIconTheme: const IconThemeData(color: Colors.grey),
-        selectedLabelTextStyle: const TextStyle(color: primaryColor),
-        unselectedLabelTextStyle: const TextStyle(color: Colors.grey),
-      ),
-    );
+    final textTheme = GoogleFonts.manropeTextTheme(Theme.of(context).textTheme);
 
     return MaterialApp.router(
       title: 'Zentry Admin',
-      theme: theme,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+        textTheme: textTheme,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: Colors.black87,
+          titleTextStyle: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        navigationRailTheme: NavigationRailThemeData(
+          backgroundColor: Colors.white,
+          indicatorColor: Colors.blueGrey.withOpacity(0.1),
+          selectedIconTheme: const IconThemeData(color: Colors.blueGrey),
+          unselectedIconTheme: IconThemeData(color: Colors.grey[400]!),
+          selectedLabelTextStyle: TextStyle(
+            color: Colors.blueGrey,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelTextStyle: TextStyle(
+            color: Colors.grey[600]!,
+          ),
+        ),
+      ),
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );
