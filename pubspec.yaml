@@ -19,6 +19,7 @@ dependencies:
   intl: ^0.20.2
   fl_chart: ^1.1.1
   google_nav_bar: ^5.0.7
+  rive: ^0.13.0
 
 dev_dependencies:
   flutter_test:
@@ -30,6 +31,7 @@ flutter:
 
   assets:
     - assets/images/new2.png
+    - assets/riv/
     - .env
     - assets/fonts/
 
