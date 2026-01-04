@@ -20,6 +20,7 @@ dependencies:
   fl_chart: ^1.1.1
   google_nav_bar: ^5.0.7
   rive: ^0.13.0
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:
@@ -30,7 +31,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/new2.png
+    - assets/images/
     - assets/riv/
     - .env
     - assets/fonts/

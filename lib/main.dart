@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/login_screen.dart';
 import 'package:myapp/main_screen.dart';
+import 'package:myapp/onboarding_screen.dart';
 import 'package:myapp/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:myapp/supabase_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async { // Made main async
@@ -38,6 +40,11 @@ void main() async { // Made main async
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  Future<bool> _isOnboardingCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('onboarding_completed') ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,17 +128,39 @@ class MyApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
-          home: StreamBuilder<AuthState>(
-            stream: Supabase.instance.client.auth.onAuthStateChange,
+          home: FutureBuilder<bool>(
+            future: _isOnboardingCompleted(),
             builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.session != null) {
-                return const MainScreen();
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(body: Center(child: CircularProgressIndicator()));
               }
-              return const LoginScreen();
+
+              if (snapshot.data == true) {
+                return const AuthGate();
+              } else {
+                return const OnboardingScreen();
+              }
             },
           ),
           debugShowCheckedModeBanner: false,
         );
+      },
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        if (snapshot.hasData && snapshot.data!.session != null) {
+          return const MainScreen();
+        }
+        return const LoginScreen();
       },
     );
   }
