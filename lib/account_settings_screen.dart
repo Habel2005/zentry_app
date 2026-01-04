@@ -17,7 +17,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Future<void> _signOut() async {
     try {
       await SupabaseService().signOut();
-      // Auth redirect will handle navigation
+      if (mounted) {
+        // Pop the settings screen
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -25,6 +28,77 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         );
       }
     }
+  }
+
+  void _showSignOutConfirmation() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Are you sure?',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'You will be returned to the login screen.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        ),
+                        child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close bottom sheet
+                          _signOut();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        ),
+                        child: const Text('Sign Out', style: TextStyle(fontSize: 16, color: Colors.white)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -108,7 +182,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       ),
     );
   }
-  
+
   Widget _buildDivider() => Divider(height: 1, color: Colors.white.withAlpha(51), indent: 16, endIndent: 16,); // 0.2 alpha
 
   Widget _buildProfileHeader(User? user) {
@@ -155,7 +229,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return ListTile(
       leading: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 24),
       title: const Text('Sign Out', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w500)),
-      onTap: _signOut,
+      onTap: _showSignOutConfirmation,
     );
   }
 }
