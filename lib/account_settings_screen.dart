@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme_provider.dart';
+import 'supabase_service.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -12,11 +13,10 @@ class AccountSettingsScreen extends StatefulWidget {
 }
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
-  final User? user = Supabase.instance.client.auth.currentUser;
 
   Future<void> _signOut() async {
     try {
-      await Supabase.instance.client.auth.signOut();
+      await SupabaseService().signOut();
       // Auth redirect will handle navigation
     } catch (e) {
       if (mounted) {
@@ -31,6 +31,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final user = Supabase.instance.client.auth.currentUser;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -65,7 +66,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         padding: const EdgeInsets.fromLTRB(20, 120, 20, 20),
         child: Column(
           children: [
-            _buildProfileHeader(),
+            _buildProfileHeader(user),
             const SizedBox(height: 30),
             _buildGlassContainer(
               context,
@@ -110,7 +111,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   
   Widget _buildDivider() => Divider(height: 1, color: Colors.white.withAlpha(51), indent: 16, endIndent: 16,); // 0.2 alpha
 
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(User? user) {
     return Column(
       children: [
         const CircleAvatar(
@@ -137,7 +138,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       leading: const Icon(Icons.brightness_6_rounded, size: 24),
       title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w500)),
       trailing: _AnimatedThemeSwitch(themeProvider: themeProvider),
-      onTap: () => themeProvider.toggleTheme(!themeProvider.isDarkMode),
+      onTap: () => themeProvider.toggleTheme(!(themeProvider.isDarkMode ?? false)),
     );
   }
 
@@ -166,9 +167,12 @@ class _AnimatedThemeSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSystemDark = MediaQuery.of(context).platformBrightness == Brightness.dark;
+    final isDarkMode = themeProvider.isDarkMode ?? isSystemDark;
+
     return GestureDetector(
       onTap: () {
-        themeProvider.toggleTheme(!themeProvider.isDarkMode);
+        themeProvider.toggleTheme(!isDarkMode);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -176,11 +180,11 @@ class _AnimatedThemeSwitch extends StatelessWidget {
         height: 30,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
-          color: themeProvider.isDarkMode ? Colors.deepPurple : Colors.grey.shade300,
+          color: isDarkMode ? Colors.deepPurple : Colors.grey.shade300,
         ),
         child: AnimatedAlign(
           duration: const Duration(milliseconds: 300),
-          alignment: themeProvider.isDarkMode ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: isDarkMode ? Alignment.centerRight : Alignment.centerLeft,
           child: Padding(
             padding: const EdgeInsets.all(4.0),
             child: Container(

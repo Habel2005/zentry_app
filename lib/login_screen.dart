@@ -15,6 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _passwordVisible = false;
 
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
@@ -92,13 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               validator: (value) => (value == null || !value.contains('@')) ? 'Please enter a valid email' : null,
                             ),
                             const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: _passwordController,
-                              hint: 'Password',
-                              icon: Icons.lock_outline,
-                              obscureText: true,
-                              validator: (value) => (value == null || value.isEmpty) ? 'Please enter your password' : null,
-                            ),
+                            _buildPasswordField(),
                             const SizedBox(height: 32),
                             _isLoading
                                 ? const CircularProgressIndicator(color: Colors.white,)
@@ -117,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon, bool obscureText = false, FormFieldValidator<String>? validator}) {
+  Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon, bool obscureText = false, FormFieldValidator<String>? validator, Widget? suffixIcon}) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
@@ -126,7 +121,8 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Colors.white70),
-        prefixIcon: const Icon(Icons.person, color: Colors.white70),
+        prefixIcon: Icon(icon, color: Colors.white70),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.black.withAlpha(51), // Deprecation fix
         border: OutlineInputBorder(
@@ -137,6 +133,27 @@ class _LoginScreenState extends State<LoginScreen> {
           borderRadius: BorderRadius.circular(12.0),
           borderSide: BorderSide(color: Colors.white.withAlpha(128)), // Deprecation fix
         ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField() {
+    return _buildTextField(
+      controller: _passwordController,
+      hint: 'Password',
+      icon: Icons.lock_outline,
+      obscureText: !_passwordVisible,
+      validator: (value) => (value == null || value.isEmpty) ? 'Please enter your password' : null,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _passwordVisible ? Icons.visibility_off : Icons.visibility,
+          color: Colors.white70,
+        ),
+        onPressed: () {
+          setState(() {
+            _passwordVisible = !_passwordVisible;
+          });
+        },
       ),
     );
   }

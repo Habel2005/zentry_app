@@ -5,7 +5,10 @@ class ThemeProvider with ChangeNotifier {
 
   ThemeMode get themeMode => _themeMode;
 
-  bool get isDarkMode => _themeMode == ThemeMode.dark;
+  bool? get isDarkMode {
+    if (_themeMode == ThemeMode.system) return null;
+    return _themeMode == ThemeMode.dark;
+  }
 
   void toggleTheme(bool isDark) {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;

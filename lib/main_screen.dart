@@ -16,9 +16,9 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  SMIBool? _hamMenuInput;
-  SMIBool? _profileHover;
-  SMITrigger? _profilePressed;
+  // Separate variables for each icon
+SMIBool? _hamInput; 
+SMIBool? _docInput;
 
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
@@ -74,51 +74,26 @@ class _MainScreenState extends State<MainScreen> {
               elevation: 0,
               centerTitle: false,
               actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      _onProfileTap(); // Calls your function
-                      _profilePressed
-                          ?.fire(); // Fires the trigger confirmed in debug
-                    },
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor:
-                          Colors.white, // Match the Rive file background
-                      child: ClipOval(
-                        child: Transform.scale(
-                          scale:
-                              2.5, // Your confirmed "sweet spot" to hide grey background
-                          child: RiveAnimation.asset(
-                            'assets/riv/avatar.riv',
-                            artboard:
-                                'New Artboard', // Matches your debug output
-                            fit: BoxFit.cover,
-                            onInit: (artboard) {
-                              final controller =
-                                  StateMachineController.fromArtboard(
-                                    artboard,
-                                    'State Machine 1', // Matches your debug output
-                                  );
-                              if (controller != null) {
-                                artboard.addController(controller);
-                                // Matches debug: 'Hover' (Bool) and 'Pressed' (Trigger)
-                                _profileHover =
-                                    controller.findInput<bool>('Hover')
-                                        as SMIBool?;
-                                _profilePressed =
-                                    controller.findSMI('Pressed')
-                                        as SMITrigger?;
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+  Padding(
+    padding: const EdgeInsets.only(right: 12.0),
+    child: GestureDetector(
+      onTap: _onProfileTap,
+      child: CircleAvatar(
+        radius: 18,
+        // Background color changes based on theme
+        backgroundColor: isDarkMode 
+            ? Colors.deepPurpleAccent.withAlpha(150) // Dark mode background
+            : const Color.fromARGB(255, 135, 104, 188), // Your light mode color
+        child: Icon(
+          Icons.person, 
+          size: 22, 
+          // Icon color can also toggle if needed, or stay white
+          color: isDarkMode ? Colors.white : Colors.white, 
+        ),
+      ),
+    ),
+  ),
+],
             ),
           ),
         ),
@@ -192,22 +167,19 @@ class _MainScreenState extends State<MainScreen> {
                               artboard: 'New Artboard',
                               fit: BoxFit.cover,
                               onInit: (artboard) {
-                                final controller =
-                                    StateMachineController.fromArtboard(
-                                      artboard,
-                                      artboard.stateMachines.first.name,
-                                    );
-                                if (controller != null) {
-                                  artboard.addController(controller);
-                                  _hamMenuInput =
-                                      controller.findInput<bool>('Hover/Press')
-                                          as SMIBool?;
-                                  if (_hamMenuInput != null) {
-                                    _hamMenuInput!.value =
-                                        (_selectedIndex == 0);
-                                  }
-                                }
-                              },
+  final controller = StateMachineController.fromArtboard(
+    artboard,
+    artboard.stateMachines.first.name,
+  );
+  if (controller != null) {
+    artboard.addController(controller);
+    // Use the unique _hamInput variable
+    _hamInput = controller.findInput<bool>('Hover/Press') as SMIBool?;
+    if (_hamInput != null) {
+      _hamInput!.value = (_selectedIndex == 0);
+    }
+  }
+},
                             ),
                           ),
                         ),
@@ -232,24 +204,19 @@ class _MainScreenState extends State<MainScreen> {
                             artboard: 'New Artboard',
                             fit: BoxFit.cover,
                             onInit: (artboard) {
-                              final controller =
-                                  StateMachineController.fromArtboard(
-                                    artboard,
-                                    'State Machine 1',
-                                  );
-                              if (controller != null) {
-                                artboard.addController(controller);
-
-                                // Updated to match your exact Input name: 'Pressed/Hover'
-                                _hamMenuInput =
-                                    controller.findInput<bool>('Pressed/Hover')
-                                        as SMIBool?;
-
-                                if (_hamMenuInput != null) {
-                                  _hamMenuInput!.value = (_selectedIndex == 0);
-                                }
-                              }
-                            },
+  final controller = StateMachineController.fromArtboard(
+    artboard,
+    'State Machine 1',
+  );
+  if (controller != null) {
+    artboard.addController(controller);
+    // Use the unique _docInput variable
+    _docInput = controller.findInput<bool>('Pressed/Hover') as SMIBool?;
+    if (_docInput != null) {
+      _docInput!.value = (_selectedIndex == 1);
+    }
+  }
+},
                           ),
                         ),
                       ),
@@ -269,9 +236,14 @@ class _MainScreenState extends State<MainScreen> {
                   setState(() {
                     _selectedIndex = index;
                   });
-                  if (_hamMenuInput != null) {
-                    _hamMenuInput!.value = (index == 0);
-                  }
+                  if (_hamInput != null) {
+    _hamInput!.value = (index == 0);
+  }
+  
+  // Update the doc icon (Index 1)
+  if (_docInput != null) {
+    _docInput!.value = (index == 1);
+  }
                 },
               ),
             ),

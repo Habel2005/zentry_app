@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:myapp/login_screen.dart';
 import 'package:myapp/main_screen.dart';
 import 'package:myapp/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:myapp/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async { // Made main async
   // Ensure that Flutter bindings are initialized
@@ -104,12 +106,13 @@ class MyApp extends StatelessWidget {
 
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
+        final isDarkMode = themeProvider.isDarkMode ?? (MediaQuery.of(context).platformBrightness == Brightness.dark);
         // Update the status bar icon brightness based on the theme
         SystemChrome.setSystemUIOverlayStyle(
           SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness: themeProvider.isDarkMode ? Brightness.light : Brightness.dark,
-            statusBarBrightness: themeProvider.isDarkMode ? Brightness.dark : Brightness.light,
+            statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+            statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
           ),
         );
 
@@ -118,7 +121,15 @@ class MyApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
-          home: const MainScreen(),
+          home: StreamBuilder<AuthState>(
+            stream: Supabase.instance.client.auth.onAuthStateChange,
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data!.session != null) {
+                return const MainScreen();
+              }
+              return const LoginScreen();
+            },
+          ),
           debugShowCheckedModeBanner: false,
         );
       },
