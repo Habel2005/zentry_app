@@ -22,6 +22,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return FutureBuilder<DashboardData>(
         future: _dashboardData,
         builder: (context, snapshot) {
@@ -45,11 +47,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSummaryCards(data),
+                    _buildSummaryCards(data, isDarkMode),
                     const SizedBox(height: 20),
-                    _buildSttQualityChart(data),
+                    _buildSttQualityChart(data, isDarkMode),
                     const SizedBox(height: 20),
-                    _buildAiVsHumanChart(data),
+                    _buildAiVsHumanChart(data, isDarkMode),
 
                   ],
                 ),
@@ -60,37 +62,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
   }
 
-  Widget _buildSummaryCards(DashboardData data) {
+  Widget _buildSummaryCards(DashboardData data, bool isDarkMode) {
     return Row(
       children: [
         Expanded(
           child: _buildSummaryCard(
-              'Total Calls', data.totalCalls.toString(), Icons.call, Colors.blue),
+              'Total Calls', data.totalCalls.toString(), Icons.call, Colors.blue, isDarkMode),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _buildSummaryCard('Ongoing', data.ongoingCalls.toString(),
-              Icons.phone_in_talk, Colors.orange),
+              Icons.phone_in_talk, Colors.orange, isDarkMode),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _buildSummaryCard('Dropped', data.droppedCalls.toString(),
-              Icons.phone_missed, Colors.red),
+              Icons.phone_missed, Colors.red, isDarkMode),
         ),
       ],
     );
   }
 
   Widget _buildSummaryCard(
-      String title, String value, IconData icon, Color color) {
+      String title, String value, IconData icon, Color color, bool isDarkMode) {
+    final cardColor = isDarkMode ? const Color(0xFF1C1C1E) : Colors.white;
+    final textColor = isDarkMode ? Colors.white.withAlpha(230) : Colors.black87; // 0.9 alpha
+    final subTextColor = isDarkMode ? Colors.white.withAlpha(153) : Colors.black54; // 0.6 alpha
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13), // Deprecation fix
+            color: isDarkMode ? Colors.black.withAlpha(77) : Colors.black.withAlpha(13), // 0.3 alpha
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 5),
@@ -101,33 +107,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            backgroundColor: color.withAlpha(25), // Deprecation fix
+            backgroundColor: color.withAlpha(25),
             radius: 20,
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 12),
-          Text(value,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text(value, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: textColor)),
           const SizedBox(height: 4),
-          Text(title, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+          Text(title, style: TextStyle(fontSize: 14, color: subTextColor)),
         ],
       ),
     );
   }
 
-  Widget _buildAiVsHumanChart(DashboardData data) {
+  Widget _buildAiVsHumanChart(DashboardData data, bool isDarkMode) {
     final double aiPercentage =
         (data.aiCalls + data.humanCalls) == 0 ? 0 : (data.aiCalls / (data.aiCalls + data.humanCalls));
+    final cardColor = isDarkMode ? const Color(0xFF1C1C1E) : Colors.white;
+    final textColor = isDarkMode ? Colors.white.withAlpha(230) : Colors.black87; // 0.9 alpha
+    final subTextColor = isDarkMode ? Colors.white.withAlpha(153) : Colors.black54; // 0.6 alpha
 
     return Container(
        padding: const EdgeInsets.all(20),
        height: 250, // Fixed height
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13), // Deprecation fix
+             color: isDarkMode ? Colors.black.withAlpha(77) : Colors.black.withAlpha(13), // 0.3 alpha
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 5),
@@ -137,8 +145,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('AI Handled',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text('AI Handled',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
           const SizedBox(height: 15),
           Expanded(
             child: Stack(
@@ -160,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         PieChartSectionData(
                           value: 1 - aiPercentage,
-                          color: Colors.grey.shade300,
+                          color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade300,
                           radius: 25,
                           showTitle: false,
                         ),
@@ -178,8 +186,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                      Text(
                       '${data.aiCalls} Calls',
-                      style: const TextStyle(
-                          fontSize: 14, color: Colors.black54),
+                      style: TextStyle(
+                          fontSize: 14, color: subTextColor),
                     ),
                   ],
                 )
@@ -191,15 +199,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSttQualityChart(DashboardData data) {
+  Widget _buildSttQualityChart(DashboardData data, bool isDarkMode) {
+    final cardColor = isDarkMode ? const Color(0xFF1C1C1E) : Colors.white;
+    final textColor = isDarkMode ? Colors.white.withAlpha(230) : Colors.black87; // 0.9 alpha
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13), // Deprecation fix
+             color: isDarkMode ? Colors.black.withAlpha(77) : Colors.black.withAlpha(13), // 0.3 alpha
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 5),
@@ -209,8 +220,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('STT Quality',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text('STT Quality',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textColor)),
           const SizedBox(height: 15),
           SizedBox(
             height: 180,
@@ -246,9 +257,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-             _buildHorizontalIndicator('Good', Colors.cyan, data.sttGood),
-             _buildHorizontalIndicator('Low', Colors.amber, data.sttLow),
-             _buildHorizontalIndicator('Failed', Colors.pinkAccent, data.sttFailed),
+             _buildHorizontalIndicator('Good', Colors.cyan, data.sttGood, isDarkMode),
+             _buildHorizontalIndicator('Low', Colors.amber, data.sttLow, isDarkMode),
+             _buildHorizontalIndicator('Failed', Colors.pinkAccent, data.sttFailed, isDarkMode),
             ],
           )
         ],
@@ -256,12 +267,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildHorizontalIndicator(String text, Color color, int value) {
+  Widget _buildHorizontalIndicator(String text, Color color, int value, bool isDarkMode) {
+    final textColor = isDarkMode ? Colors.white.withAlpha(230) : Colors.black87; // 0.9 alpha
+    final subTextColor = isDarkMode ? Colors.white.withAlpha(153) : Colors.black54; // 0.6 alpha
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(value.toString(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black87)),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: textColor)),
         const SizedBox(height: 4),
         Row(
           children: [
@@ -274,7 +288,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(width: 6),
-            Text(text, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+            Text(text, style: TextStyle(fontSize: 14, color: subTextColor)),
           ],
         )
       ],

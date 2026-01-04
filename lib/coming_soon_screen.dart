@@ -23,10 +23,10 @@ class ComingSoonScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? Colors.black.withOpacity(0.25)
-                      : Colors.white.withOpacity(0.15),
+                      ? Colors.black.withAlpha(64) // 0.25 alpha
+                      : Colors.white.withAlpha(38), // 0.15 alpha
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                  border: Border.all(color: Colors.white.withAlpha(51)), // 0.2 alpha
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -45,7 +45,7 @@ class ComingSoonScreen extends StatelessWidget {
                     Icon(
                       Icons.construction_rounded,
                       size: 60,
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      color: Theme.of(context).colorScheme.primary.withAlpha(204), // 0.8 alpha
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -53,7 +53,7 @@ class ComingSoonScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
-                        color: isDarkMode ? Colors.white.withOpacity(0.9) : Colors.black54,
+                        color: isDarkMode ? Colors.white.withAlpha(230) : Colors.black54, // 0.9 alpha
                       ),
                     ),
                     const SizedBox(height: 12),

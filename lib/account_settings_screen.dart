@@ -97,10 +97,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: isDarkMode
-                ? Colors.black.withOpacity(0.2)
-                : Colors.white.withOpacity(0.3),
+                ? Colors.black.withAlpha(51) // 0.2 alpha
+                : Colors.white.withAlpha(77), // 0.3 alpha
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
+            border: Border.all(color: Colors.white.withAlpha(26)), // 0.1 alpha
           ),
           child: child,
         ),
@@ -108,7 +108,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
   }
   
-  Widget _buildDivider() => Divider(height: 1, color: Colors.white.withOpacity(0.2), indent: 16, endIndent: 16,);
+  Widget _buildDivider() => Divider(height: 1, color: Colors.white.withAlpha(51), indent: 16, endIndent: 16,); // 0.2 alpha
 
   Widget _buildProfileHeader() {
     return Column(

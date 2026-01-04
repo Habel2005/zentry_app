@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:myapp/main_screen.dart';
+import 'package:myapp/theme_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:myapp/supabase_service.dart';
 
-import 'login_screen.dart';
-import 'main_screen.dart';
-import 'theme_provider.dart';
-
-void main() async {
+void main() async { // Made main async
+  // Ensure that Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
   await dotenv.load(fileName: ".env");
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+
+  // Initialize Supabase
+  await SupabaseService.initialize();
+
+  // Make the status bar transparent
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark, // For Android
+      statusBarBrightness: Brightness.light,    // For iOS
+    ),
   );
-  GoogleFonts.config.allowRuntimeFetching = false;
 
   runApp(
     ChangeNotifierProvider(
@@ -30,97 +39,88 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    const primarySeedColor = Colors.deepPurple;
+    const primarySeedColor = Color(0xFF6200EE);
 
-    // Define a common TextTheme for consistency
-    final appTextTheme = GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme);
+    final textTheme = Theme.of(context).textTheme;
+    final appTextTheme = GoogleFonts.poppinsTextTheme(textTheme).copyWith(
+      // You can add more specific text style overrides here if needed
+    );
 
     // --- Modern Light Theme ---
-    final ThemeData lightTheme = ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primarySeedColor,
-        brightness: Brightness.light,
-      ),
-      scaffoldBackgroundColor: const Color(0xFFF5F5F7), // A clean, Apple-like light gray
-      textTheme: appTextTheme,
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white.withAlpha(200),
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        titleTextStyle: appTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: primarySeedColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        ),
-      ),
-    );
+        final ThemeData lightTheme = ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.light,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: primarySeedColor,
+            brightness: Brightness.light,
+          ),
+          scaffoldBackgroundColor: const Color(0xFFF5F5F7), // A clean, Apple-like light gray
+          textTheme: appTextTheme,
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.white.withAlpha(200),
+            foregroundColor: Colors.black87,
+            elevation: 0,
+            titleTextStyle: appTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: primarySeedColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        );
 
     // --- Modern Dark Theme ---
-    final ThemeData darkTheme = ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primarySeedColor,
-        brightness: Brightness.dark,
-        background: const Color(0xFF121212), // Deep, rich dark background
-      ),
-      scaffoldBackgroundColor: const Color(0xFF000000), // Pure black for a sleek feel
-      textTheme: appTextTheme.apply(bodyColor: Colors.white70, displayColor: Colors.white),
-      appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFF1A1A1A).withAlpha(200),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        titleTextStyle: appTextTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: primarySeedColor.shade300,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        ),
-      ),
-    );
+        final ThemeData darkTheme = ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.dark,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: primarySeedColor,
+            brightness: Brightness.dark,
+            surface: const Color(0xFF121212), // Deep, rich dark background
+          ),
+          scaffoldBackgroundColor: const Color(0xFF121212), // Softer, less contrasty dark background
+          textTheme: appTextTheme.apply(bodyColor: Colors.white.withAlpha(217), displayColor: Colors.white),
+          appBarTheme: AppBarTheme(
+            backgroundColor: const Color(0xFF1C1C1E).withAlpha(200), // Slightly lighter than background
+            foregroundColor: Colors.white,
+            elevation: 0,
+            titleTextStyle: appTextTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: primarySeedColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        );
 
-    return MaterialApp(
-      title: 'Zentry',
-      theme: lightTheme,
-      darkTheme: darkTheme,
-      themeMode: themeProvider.themeMode,
-      home: const AuthRedirect(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
-}
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        // Update the status bar icon brightness based on the theme
+        SystemChrome.setSystemUIOverlayStyle(
+          SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: themeProvider.isDarkMode ? Brightness.light : Brightness.dark,
+            statusBarBrightness: themeProvider.isDarkMode ? Brightness.dark : Brightness.light,
+          ),
+        );
 
-class AuthRedirect extends StatelessWidget {
-  const AuthRedirect({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<AuthState>(
-      stream: Supabase.instance.client.auth.onAuthStateChange,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator(color: Colors.deepPurple,)),
-          );
-        }
-        if (snapshot.hasData && snapshot.data!.session != null) {
-          return const MainScreen();
-        } else {
-          return const LoginScreen();
-        }
+        return MaterialApp(
+          title: 'ConvoSense AI',
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const MainScreen(),
+          debugShowCheckedModeBanner: false,
+        );
       },
     );
   }

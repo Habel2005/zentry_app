@@ -52,11 +52,11 @@ class _CallLogScreenState extends State<CallLogScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? Colors.black.withOpacity(0.3)
-                      : Colors.white.withOpacity(0.4),
+                      ? Colors.black.withAlpha(77) // 0.3 alpha
+                      : Colors.white.withAlpha(102), // 0.4 alpha
                   borderRadius: BorderRadius.circular(16.0),
                   border: Border.all(
-                    color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1),
+                    color: (isDarkMode ? Colors.white : Colors.black).withAlpha(26), // 0.1 alpha
                   ),
                 ),
                 child: _dataSource == null
@@ -89,11 +89,11 @@ class _CallLogScreenState extends State<CallLogScreen> {
 
   ThemeData _createDataTableTheme(BuildContext context, bool isDarkMode) {
   final headingColor = isDarkMode ? Colors.white : Colors.black87;
-  final dataColor = isDarkMode ? Colors.white.withOpacity(0.9) : Colors.black.withOpacity(0.8);
+  final dataColor = isDarkMode ? Colors.white.withAlpha(230) : Colors.black.withAlpha(204);
 
   return Theme.of(context).copyWith(
     cardColor: Colors.transparent,
-    dividerColor: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.15),
+    dividerColor: (isDarkMode ? Colors.white : Colors.black).withAlpha(38),
     dataTableTheme: DataTableThemeData(
       headingRowHeight: 56,
       dataRowMinHeight: 55,
@@ -109,12 +109,12 @@ class _CallLogScreenState extends State<CallLogScreen> {
         fontFamily: 'Poppins',
         fontWeight: FontWeight.w500,
       ),
-      headingRowColor: MaterialStateProperty.all(
-        (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1),
+      headingRowColor: WidgetStateProperty.all(
+        (isDarkMode ? Colors.white : Colors.black).withAlpha(26),
       ),
-      dataRowColor: MaterialStateProperty.resolveWith<Color?>((states) {
-        if (states.contains(MaterialState.hovered)) {
-          return (isDarkMode ? Colors.white : Colors.black).withOpacity(0.08);
+      dataRowColor: WidgetStateProperty.resolveWith<Color?>((states) {
+        if (states.contains(WidgetState.hovered)) {
+          return (isDarkMode ? Colors.white : Colors.black).withAlpha(20);
         }
         return Colors.transparent; // Default row color
       }),

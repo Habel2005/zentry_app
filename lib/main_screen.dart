@@ -89,14 +89,14 @@ class _MainScreenState extends State<MainScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: isDarkMode
-              ? const Color(0xFF1A1A1A).withOpacity(0.8)
-              : Colors.white.withOpacity(0.8),
+              ? const Color(0xFF1A1A1A).withAlpha(204) // 0.8 alpha
+              : Colors.white.withAlpha(204), // 0.8 alpha
           borderRadius: BorderRadius.circular(50),
           boxShadow: [
             BoxShadow(
               color: isDarkMode
-                  ? Colors.black.withOpacity(0.25)
-                  : Colors.black.withOpacity(0.1),
+                  ? Colors.black.withAlpha(64) // 0.25 alpha
+                  : Colors.black.withAlpha(26), // 0.1 alpha
               spreadRadius: 2,
               blurRadius: 10,
             )
