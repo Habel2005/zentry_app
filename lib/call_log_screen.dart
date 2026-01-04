@@ -45,41 +45,22 @@ class _CallLogScreenState extends State<CallLogScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 100, 20, 20),
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16.0),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? Colors.black.withAlpha(77) // 0.3 alpha
-                      : Colors.white.withAlpha(102), // 0.4 alpha
-                  borderRadius: BorderRadius.circular(16.0),
-                  border: Border.all(
-                    color: (isDarkMode ? Colors.white : Colors.black).withAlpha(26), // 0.1 alpha
-                  ),
-                ),
-                child: _dataSource == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : Theme(
-                        data: _createDataTableTheme(context, isDarkMode),
-                        child: PaginatedDataTable(
-                          showCheckboxColumn: false,
-                          rowsPerPage: _rowsPerPage,
-                          onRowsPerPageChanged: (int? value) {
-                            setState(() {
-                              _rowsPerPage = value!;
-                            });
-                          },
-                          sortColumnIndex: _sortColumnIndex,
-                          sortAscending: _sortAscending,
-                          columns: _getColumns(),
-                          source: _dataSource!,
-                          columnSpacing: 20,
-                          horizontalMargin: 20,
-                        ),
-                      ),
-              ),
+          Theme(
+            data: _createDataTableTheme(context, isDarkMode),
+            child: PaginatedDataTable(
+              showCheckboxColumn: false,
+              rowsPerPage: _rowsPerPage,
+              onRowsPerPageChanged: (int? value) {
+                setState(() {
+                  _rowsPerPage = value!;
+                });
+              },
+              sortColumnIndex: _sortColumnIndex,
+              sortAscending: _sortAscending,
+              columns: _getColumns(),
+              source: _dataSource ?? _CallListDataSource(context), // Ensure datasource is not null
+              columnSpacing: 20,
+              horizontalMargin: 20,
             ),
           ),
         ],
@@ -88,41 +69,52 @@ class _CallLogScreenState extends State<CallLogScreen> {
   }
 
   ThemeData _createDataTableTheme(BuildContext context, bool isDarkMode) {
-  final headingColor = isDarkMode ? Colors.white : Colors.black87;
-  final dataColor = isDarkMode ? Colors.white.withAlpha(230) : Colors.black.withAlpha(204);
+    final theme = Theme.of(context);
+    final headingColor = isDarkMode ? Colors.white : Colors.black87;
+    final dataColor = isDarkMode ? Colors.white70 : Colors.black87;
 
-  return Theme.of(context).copyWith(
-    cardColor: Colors.transparent,
-    dividerColor: (isDarkMode ? Colors.white : Colors.black).withAlpha(38),
-    dataTableTheme: DataTableThemeData(
-      headingRowHeight: 56,
-      dataRowMinHeight: 55,
-      dataRowMaxHeight: 65,
-      headingTextStyle: TextStyle(
-        fontWeight: FontWeight.bold,
-        color: headingColor,
-        fontFamily: 'Poppins',
-        fontSize: 14,
+    return theme.copyWith(
+      cardTheme: theme.cardTheme.copyWith(
+        color: isDarkMode ? const Color(0xFF1A1A1A).withAlpha(200) : Colors.white,
+        surfaceTintColor: isDarkMode ? null : Colors.white,
+        elevation: 0, // Remove shadow from the card itself
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          side: BorderSide(
+            color: isDarkMode ? Colors.white.withAlpha(50) : Colors.grey.withAlpha(100),
+            width: 1,
+          ),
+        ),
       ),
-      dataTextStyle: TextStyle(
-        color: dataColor,
-        fontFamily: 'Poppins',
-        fontWeight: FontWeight.w500,
+      dividerColor: isDarkMode ? Colors.white.withAlpha(50) : Colors.grey.withAlpha(100),
+      dataTableTheme: DataTableThemeData(
+        headingRowHeight: 56,
+        dataRowMinHeight: 55,
+        dataRowMaxHeight: 65,
+        headingTextStyle: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: headingColor,
+          fontFamily: 'Poppins',
+          fontSize: 14,
+        ),
+        dataTextStyle: TextStyle(
+          color: dataColor,
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w500,
+        ),
+        headingRowColor: WidgetStateProperty.all(
+          isDarkMode ? Colors.white.withAlpha(26) : Colors.grey.withAlpha(50),
+        ),
+        dataRowColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return isDarkMode ? Colors.white.withAlpha(20) : Colors.grey.withAlpha(40);
+          }
+          return Colors.transparent; // Default row color
+        }),
+        dividerThickness: 1,
       ),
-      headingRowColor: WidgetStateProperty.all(
-        (isDarkMode ? Colors.white : Colors.black).withAlpha(26),
-      ),
-      dataRowColor: WidgetStateProperty.resolveWith<Color?>((states) {
-        if (states.contains(WidgetState.hovered)) {
-          return (isDarkMode ? Colors.white : Colors.black).withAlpha(20);
-        }
-        return Colors.transparent; // Default row color
-      }),
-      dividerThickness: 1,
-    ),
-  );
-}
-
+    );
+  }
 
   List<DataColumn> _getColumns() {
     return [
@@ -189,7 +181,7 @@ class _CallListDataSource extends DataTableSource {
       index: index,
       onSelectChanged: (isSelected) {
         if (isSelected ?? false) {
-          GoRouter.of(context).go('/calls/${call.callId}');
+          // Implement navigation to call detail screen
         }
       },
       cells: [

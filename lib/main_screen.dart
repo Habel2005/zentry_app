@@ -89,23 +89,24 @@ class _MainScreenState extends State<MainScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: isDarkMode
-              ? const Color(0xFF1A1A1A).withAlpha(204) // 0.8 alpha
-              : Colors.white.withAlpha(204), // 0.8 alpha
+              ? const Color(0xFF1A1A1A).withAlpha(170) // ~67% alpha
+              : Colors.white.withAlpha(170), // ~67% alpha
           borderRadius: BorderRadius.circular(50),
           boxShadow: [
             BoxShadow(
               color: isDarkMode
-                  ? Colors.black.withAlpha(64) // 0.25 alpha
-                  : Colors.black.withAlpha(26), // 0.1 alpha
+                  ? Colors.black.withAlpha(51) // 0.2 alpha
+                  : Colors.black.withAlpha(20), // 0.08 alpha
               spreadRadius: 2,
-              blurRadius: 10,
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             )
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(50),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               child: GNav(
@@ -118,8 +119,8 @@ class _MainScreenState extends State<MainScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 duration: const Duration(milliseconds: 400),
                 tabBackgroundColor: isDarkMode
-                    ? _colors[_selectedIndex].withAlpha(100)
-                    : _colors[_selectedIndex].withAlpha(60),
+                    ? _colors[_selectedIndex].withAlpha(70)
+                    : _colors[_selectedIndex].withAlpha(40),
                 color: isDarkMode ? Colors.white70 : Colors.black54,
                 tabs: const [
                   GButton(
