@@ -200,7 +200,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   GButton(
                     icon: Icons.dashboard_rounded, // Keeps GNav spacing logic
-                    text: 'Dashboard',
+                    text: 'Logs',
                     leading: Container(
                       width: 28, // Slightly larger for better visibility
                       height: 28,
