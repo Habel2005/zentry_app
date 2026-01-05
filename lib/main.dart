@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
         );
 
         return MaterialApp(
-          title: 'ConvoSense AI',
+          title: 'Zentry',
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
