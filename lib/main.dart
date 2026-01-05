@@ -11,22 +11,16 @@ import 'package:myapp/supabase_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() async { // Made main async
-  // Ensure that Flutter bindings are initialized
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load environment variables
   await dotenv.load(fileName: ".env");
-
-  // Initialize Supabase
   await SupabaseService.initialize();
 
-  // Make the status bar transparent
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark, // For Android
-      statusBarBrightness: Brightness.light,    // For iOS
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
     ),
   );
 
@@ -38,11 +32,28 @@ void main() async { // Made main async
   );
 }
 
-class MyApp extends StatelessWidget {
+// CRITICAL FIX: Converted to a StatefulWidget to prevent login screen reload.
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final Future<bool> _onboardingFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // The future is now run only ONCE when the app starts.
+    _onboardingFuture = _isOnboardingCompleted();
+  }
 
   Future<bool> _isOnboardingCompleted() async {
     final prefs = await SharedPreferences.getInstance();
+    // For testing, you can uncomment the line below to reset onboarding
+    // await prefs.setBool('onboarding_completed', false);
     return prefs.getBool('onboarding_completed') ?? false;
   }
 
@@ -51,70 +62,65 @@ class MyApp extends StatelessWidget {
     const primarySeedColor = Color(0xFF6200EE);
 
     final textTheme = Theme.of(context).textTheme;
-    final appTextTheme = GoogleFonts.poppinsTextTheme(textTheme).copyWith(
-      // You can add more specific text style overrides here if needed
+    final appTextTheme = GoogleFonts.poppinsTextTheme(textTheme);
+
+    final lightTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primarySeedColor,
+        brightness: Brightness.light,
+      ),
+      scaffoldBackgroundColor: const Color(0xFFF5F5F7),
+      textTheme: appTextTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.white.withAlpha(200),
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        titleTextStyle: appTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: primarySeedColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+      ),
     );
 
-    // --- Modern Light Theme ---
-        final ThemeData lightTheme = ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.light,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: primarySeedColor,
-            brightness: Brightness.light,
-          ),
-          scaffoldBackgroundColor: const Color(0xFFF5F5F7), // A clean, Apple-like light gray
-          textTheme: appTextTheme,
-          appBarTheme: AppBarTheme(
-            backgroundColor: Colors.white.withAlpha(200),
-            foregroundColor: Colors.black87,
-            elevation: 0,
-            titleTextStyle: appTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: primarySeedColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-        );
-
-    // --- Modern Dark Theme ---
-        final ThemeData darkTheme = ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.dark,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: primarySeedColor,
-            brightness: Brightness.dark,
-            surface: const Color(0xFF121212), // Deep, rich dark background
-          ),
-          scaffoldBackgroundColor: const Color(0xFF121212), // Softer, less contrasty dark background
-          textTheme: appTextTheme.apply(bodyColor: Colors.white.withAlpha(217), displayColor: Colors.white),
-          appBarTheme: AppBarTheme(
-            backgroundColor: const Color(0xFF1C1C1E).withAlpha(200), // Slightly lighter than background
-            foregroundColor: Colors.white,
-            elevation: 0,
-            titleTextStyle: appTextTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: primarySeedColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-        );
+    final darkTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primarySeedColor,
+        brightness: Brightness.dark,
+        surface: const Color(0xFF121212),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      textTheme: appTextTheme.apply(bodyColor: Colors.white.withAlpha(217), displayColor: Colors.white),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF1C1C1E).withAlpha(200),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        titleTextStyle: appTextTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: primarySeedColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+      ),
+    );
 
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         final isDarkMode = themeProvider.isDarkMode ?? (MediaQuery.of(context).platformBrightness == Brightness.dark);
-        // Update the status bar icon brightness based on the theme
         SystemChrome.setSystemUIOverlayStyle(
           SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
@@ -128,14 +134,17 @@ class MyApp extends StatelessWidget {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: themeProvider.themeMode,
+          // The FutureBuilder now uses the state variable, preventing reloads.
           home: FutureBuilder<bool>(
-            future: _isOnboardingCompleted(),
+            future: _onboardingFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(body: Center(child: CircularProgressIndicator()));
               }
 
-              if (snapshot.data == true) {
+              final isOnboardingCompleted = snapshot.data ?? false;
+
+              if (isOnboardingCompleted) {
                 return const AuthGate();
               } else {
                 return const OnboardingScreen();
@@ -157,6 +166,10 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<AuthState>(
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // While waiting for auth state, show a loader.
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
         if (snapshot.hasData && snapshot.data!.session != null) {
           return const MainScreen();
         }

@@ -17,8 +17,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   // Separate variables for each icon
-SMIBool? _hamInput; 
-SMIBool? _docInput;
+  SMIBool? _hamInput;
+  SMIBool? _docInput;
+  SMIBool? _folderInput;
+  SMITrigger? _layersInput;
 
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
@@ -74,26 +76,33 @@ SMIBool? _docInput;
               elevation: 0,
               centerTitle: false,
               actions: [
-  Padding(
-    padding: const EdgeInsets.only(right: 12.0),
-    child: GestureDetector(
-      onTap: _onProfileTap,
-      child: CircleAvatar(
-        radius: 18,
-        // Background color changes based on theme
-        backgroundColor: isDarkMode 
-            ? Colors.deepPurpleAccent.withAlpha(150) // Dark mode background
-            : const Color.fromARGB(255, 135, 104, 188), // Your light mode color
-        child: Icon(
-          Icons.person, 
-          size: 22, 
-          // Icon color can also toggle if needed, or stay white
-          color: isDarkMode ? Colors.white : Colors.white, 
-        ),
-      ),
-    ),
-  ),
-],
+                Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: GestureDetector(
+                    onTap: _onProfileTap,
+                    child: CircleAvatar(
+                      radius: 18,
+                      // Background color changes based on theme
+                      backgroundColor: isDarkMode
+                          ? Colors.deepPurpleAccent.withAlpha(
+                              150,
+                            ) // Dark mode background
+                          : const Color.fromARGB(
+                              255,
+                              135,
+                              104,
+                              188,
+                            ), // Your light mode color
+                      child: Icon(
+                        Icons.person,
+                        size: 22,
+                        // Icon color can also toggle if needed, or stay white
+                        color: isDarkMode ? Colors.white : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -167,19 +176,22 @@ SMIBool? _docInput;
                               artboard: 'New Artboard',
                               fit: BoxFit.cover,
                               onInit: (artboard) {
-  final controller = StateMachineController.fromArtboard(
-    artboard,
-    artboard.stateMachines.first.name,
-  );
-  if (controller != null) {
-    artboard.addController(controller);
-    // Use the unique _hamInput variable
-    _hamInput = controller.findInput<bool>('Hover/Press') as SMIBool?;
-    if (_hamInput != null) {
-      _hamInput!.value = (_selectedIndex == 0);
-    }
-  }
-},
+                                final controller =
+                                    StateMachineController.fromArtboard(
+                                      artboard,
+                                      artboard.stateMachines.first.name,
+                                    );
+                                if (controller != null) {
+                                  artboard.addController(controller);
+                                  // Use the unique _hamInput variable
+                                  _hamInput =
+                                      controller.findInput<bool>('Hover/Press')
+                                          as SMIBool?;
+                                  if (_hamInput != null) {
+                                    _hamInput!.value = (_selectedIndex == 0);
+                                  }
+                                }
+                              },
                             ),
                           ),
                         ),
@@ -204,31 +216,126 @@ SMIBool? _docInput;
                             artboard: 'New Artboard',
                             fit: BoxFit.cover,
                             onInit: (artboard) {
-  final controller = StateMachineController.fromArtboard(
-    artboard,
-    'State Machine 1',
-  );
-  if (controller != null) {
-    artboard.addController(controller);
-    // Use the unique _docInput variable
-    _docInput = controller.findInput<bool>('Pressed/Hover') as SMIBool?;
-    if (_docInput != null) {
-      _docInput!.value = (_selectedIndex == 1);
-    }
-  }
-},
+                              final controller =
+                                  StateMachineController.fromArtboard(
+                                    artboard,
+                                    'State Machine 1',
+                                  );
+                              if (controller != null) {
+                                artboard.addController(controller);
+                                // Use the unique _docInput variable
+                                _docInput =
+                                    controller.findInput<bool>('Pressed/Hover')
+                                        as SMIBool?;
+                                if (_docInput != null) {
+                                  _docInput!.value = (_selectedIndex == 1);
+                                }
+                              }
+                            },
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const GButton(
-                    icon: Icons.analytics_outlined, // Updated icon
-                    text: 'Overview', // Updated text
+                  GButton(
+                    icon: Icons.analytics_outlined,
+                    text: 'Overview',
+                    leading: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: ClipOval(
+                        child: AnimatedScale(
+                          scale: 6,
+                          duration: const Duration(milliseconds: 300),
+                          child: AnimatedSlide(
+                            // This moves the icon based on whether it is selected
+                            // Offset(x, y) where y: 0.0 is center, 1.0 is full height down
+                            offset: _selectedIndex == 2
+                                ? const Offset(
+                                    0,
+                                    0.04,
+                                  ) // Move it DOWN when animating
+                                : const Offset(
+                                    0,
+                                    0.008,
+                                  ), // Stay centered when idle
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOut,
+                            child: RiveAnimation.asset(
+                              'assets/riv/folder.riv',
+                              artboard: 'New Artboard',
+                              fit: BoxFit.cover,
+                              onInit: (artboard) {
+                                final controller =
+                                    StateMachineController.fromArtboard(
+                                      artboard,
+                                      'State Machine 1',
+                                    );
+                                if (controller != null) {
+                                  artboard.addController(controller);
+                                  _folderInput =
+                                      controller.findInput<bool>('Hover/Press')
+                                          as SMIBool?;
+                                  if (_folderInput != null) {
+                                    _folderInput!.value = (_selectedIndex == 2);
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  const GButton(
-                    icon: Icons.show_chart_rounded, // Updated icon
-                    text: 'Baseline', // Updated text
+
+                  GButton(
+                    icon: Icons.layers_rounded,
+                    text: 'Baseline',
+                    leading: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: ClipOval(
+                        child: Transform.scale(
+                          scale: 2.0,
+                          child: Transform.translate(
+                            offset: Offset(0, 1),
+                            child: RiveAnimation.asset(
+                              'assets/riv/layer.riv',
+                              artboard: 'Artboard',
+                              fit: BoxFit.contain,
+                              onInit: (artboard) {
+                                final controller =
+                                    StateMachineController.fromArtboard(
+                                      artboard,
+                                      'State Machine 1',
+                                    );
+                                if (controller != null) {
+                                  artboard.addController(controller);
+                            
+                                  // 1. Change SMIBool to SMITrigger
+                                  _layersInput =
+                                      controller.findInput<bool>('Click')
+                                          as SMITrigger?;
+                            
+                                  // 2. Use .fire() instead of .value
+                                  if (_selectedIndex == 3) {
+                                    _layersInput?.fire();
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
                 selectedIndex: _selectedIndex,
@@ -237,13 +344,22 @@ SMIBool? _docInput;
                     _selectedIndex = index;
                   });
                   if (_hamInput != null) {
-    _hamInput!.value = (index == 0);
-  }
-  
-  // Update the doc icon (Index 1)
-  if (_docInput != null) {
-    _docInput!.value = (index == 1);
-  }
+                    _hamInput!.value = (index == 0);
+                  }
+
+                  // Update the doc icon (Index 1)
+                  if (_docInput != null) {
+                    _docInput!.value = (index == 1);
+                  }
+
+                  if (_folderInput != null) {
+                    _folderInput!.value = (index == 2);
+                  }
+
+                  if (index == 3 && _layersInput != null) {
+                    _layersInput!
+                        .fire(); // This triggers the "Click-on" animation sequence
+                  }
                 },
               ),
             ),
