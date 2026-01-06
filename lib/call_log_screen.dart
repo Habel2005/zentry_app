@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/models/admin_call_list.dart';
+import 'package:myapp/refresh_screen.dart';
 import 'package:myapp/supabase_service.dart';
 
 class CallLogScreen extends StatefulWidget {
@@ -34,13 +35,21 @@ class _CallLogScreenState extends State<CallLogScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return RefreshIndicator(
+    // 2. Replace RefreshIndicator with RiveRefreshIndicator
+    return RiveRefreshIndicator(
+      riveAnimationPath: 'assets/riv/load.riv', // Ensure path is correct
       onRefresh: () async {
+        // We simulate a small delay or wait for the data source to fetch
         setState(() {
           _dataSource = _CallListDataSource(context);
         });
+        // Give the UI a moment to show the 'Success/Complete' part of the Rive animation
+        await Future.delayed(const Duration(seconds: 1));
       },
       child: ListView(
+        // 3. CRITICAL: AlwaysScrollableScrollPhysics makes sure the pull gesture 
+        // works even if the table has very few rows.
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 100, 20, 20),
         children: [
           Theme(
@@ -56,7 +65,7 @@ class _CallLogScreenState extends State<CallLogScreen> {
               sortColumnIndex: _sortColumnIndex,
               sortAscending: _sortAscending,
               columns: _getColumns(),
-              source: _dataSource ?? _CallListDataSource(context), // Ensure datasource is not null
+              source: _dataSource ?? _CallListDataSource(context),
               columnSpacing: 20,
               horizontalMargin: 20,
             ),

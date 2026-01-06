@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:myapp/models/dashboard_data.dart';
+import 'package:myapp/refresh_screen.dart';
 import 'package:myapp/supabase_service.dart';
 import 'dart:math';
 
@@ -35,29 +36,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
               snapshot.data!.totalCalls == 0) {
             return const Center(child: Text('No call data available for today.'));
           } else {
-            final data = snapshot.data!;
-            return RefreshIndicator(
-              onRefresh: () async {
-                setState(() {
-                  _dashboardData = SupabaseService().getDashboardData();
-                });
-              },
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 100, 20, 20), // Add top padding for the floating app bar
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSummaryCards(data, isDarkMode),
-                    const SizedBox(height: 20),
-                    _buildSttQualityChart(data, isDarkMode),
-                    const SizedBox(height: 20),
-                    _buildAiVsHumanChart(data, isDarkMode),
-
-                  ],
-                ),
-              ),
-            );
-          }
+  final data = snapshot.data!;
+  
+  return RiveRefreshIndicator(
+    riveAnimationPath: 'assets/riv/load.riv', 
+    onRefresh: () async {
+      final newData = await SupabaseService().getDashboardData();
+      setState(() {
+        _dashboardData = Future.value(newData);
+      });
+    },
+    // Adding physics here is the key to making the pull gesture register
+    child: SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(), // <--- ADD THIS
+      padding: const EdgeInsets.fromLTRB(20, 100, 20, 20), 
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSummaryCards(data, isDarkMode),
+          const SizedBox(height: 20),
+          _buildSttQualityChart(data, isDarkMode),
+          const SizedBox(height: 20),
+          _buildAiVsHumanChart(data, isDarkMode),
+        ],
+      ),
+    ),
+  );
+}
         },
       );
   }
