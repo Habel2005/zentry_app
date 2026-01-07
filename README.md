@@ -52,7 +52,7 @@ lib/
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/yourusername/zentry_app.git](https://github.com/yourusername/zentry_app.git)
+    git clone [https://github.com/Habel2005/zentry_app.git](https://github.com/Habel2005/zentry_app.git)
     cd zentry_app
     ```
 
