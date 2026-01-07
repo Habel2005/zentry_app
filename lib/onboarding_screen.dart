@@ -20,7 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, String>> _onboardingData = [
     {
       'rive_asset': 'assets/riv/working.riv',
-      'headline': 'Welcome to ConvoSense AI',
+      'headline': 'Welcome to Zentry AI',
       'text':
           'Unlock powerful insights from your conversations. The future of communication analysis is here.',
     },
@@ -28,7 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'rive_asset': 'assets/riv/devai.riv',
       'headline': 'Intelligent Call Summaries',
       'text':
-          'Instantly get the gist of any conversation with AI-powered summaries and key topic identification.',
+          'Instantly get the ist of any conversation with AI-powered summaries and key topic identification.',
     },
     {
       'rive_asset': 'assets/riv/manhomelap.riv',
