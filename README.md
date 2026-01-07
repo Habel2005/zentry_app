@@ -8,19 +8,20 @@ A powerful Flutter-based mobile dashboard for the **Zentry AI** platform. This a
 <p align="center">
   <img src="screenshots/a.png" width="30%" />
   <img src="screenshots/b.png" width="30%" />
-  <img src="screenshots/c.png" width="30%" />
+  <img src="screenshots/l.png" width="30%" />
 </p>
 <p align="center">
+  <img src="screenshots/c.png" width="30%" />
   <img src="screenshots/d.png" width="30%" />
   <img src="screenshots/e.png" width="30%" />
-  <img src="screenshots/f.png" width="30%" />
 </p>
 <p align="center">
+  <img src="screenshots/f.png" width="30%" />
   <img src="screenshots/g.png" width="30%" />
   <img src="screenshots/h.png" width="30%" />
-  <img src="screenshots/i.png" width="30%" />
 </p>
 <p align="center">
+  <img src="screenshots/i.png" width="30%" />
   <img src="screenshots/j.png" width="30%" />
   <img src="screenshots/k.png" width="30%" />
 </p>
