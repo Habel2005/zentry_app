@@ -32,7 +32,13 @@ A powerful Flutter-based mobile dashboard for the **Zentry AI** platform. This a
 
 ## 📂 Project Structure
 
-lib/ ├── models/ # Data models (DashboardData, CallDetail, AiProcessingStep) ├── assets/ # Rive animations, images, and fonts ├── dashboard_screen.dart # Main analytics view with charts ├── login_screen.dart # Authentication handler ├── main.dart # Entry point and app configuration ├── supabase_service.dart # Backend communication layer └── ...
+lib/    
+├── models/ # Data models (DashboardData, CallDetail, AiProcessingStep) 
+├── assets/ # Rive animations, images, and fonts 
+├── dashboard_screen.dart # Main analytics view with charts 
+├── login_screen.dart # Authentication handler 
+├── main.dart # Entry point and app configuration 
+├── supabase_service.dart # Backend communication layer └── ...
 
 
 ## 🏁 Getting Started
@@ -71,7 +77,7 @@ lib/ ├── models/ # Data models (DashboardData, CallDetail, AiProcessingSte
 
 The project includes unit and widget tests. Run them using:
 
-```
+```bash
 flutter test
 ```
 ## 📄 License
