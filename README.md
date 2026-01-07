@@ -2,6 +2,36 @@
 
 A powerful Flutter-based mobile dashboard for the **Zentry AI** platform. This application provides real-time monitoring, analytics, and insights into AI-driven voice interactions, allowing administrators to track call performance, STT (Speech-to-Text) quality, and agent handoffs.
 
+Here is your updated README.md featuring a sleek gallery grid for your screenshots (a.png through k.png) and detailed project information based on your code.
+
+Markdown
+
+# Zentry App 📱
+
+A powerful Flutter-based mobile dashboard for the **Zentry AI** platform. This application provides real-time monitoring, analytics, and insights into AI-driven voice interactions, allowing administrators to track call performance, STT (Speech-to-Text) quality, and agent handoffs.
+
+## 📸 App Gallery
+
+<p align="center">
+  <img src="screenshots/a.png" width="30%" />
+  <img src="screenshots/b.png" width="30%" />
+  <img src="screenshots/c.png" width="30%" />
+</p>
+<p align="center">
+  <img src="screenshots/d.png" width="30%" />
+  <img src="screenshots/e.png" width="30%" />
+  <img src="screenshots/f.png" width="30%" />
+</p>
+<p align="center">
+  <img src="screenshots/g.png" width="30%" />
+  <img src="screenshots/h.png" width="30%" />
+  <img src="screenshots/i.png" width="30%" />
+</p>
+<p align="center">
+  <img src="screenshots/j.png" width="30%" />
+  <img src="screenshots/k.png" width="30%" />
+</p>
+
 ## 🚀 Features
 
 * **Real-Time Dashboard**:
