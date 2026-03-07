@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:myapp/admission_baseline_screen.dart';
+import 'package:myapp/caller_overview_screen.dart';
 import 'package:rive/rive.dart';
 import 'dashboard_screen.dart';
 import 'call_log_screen.dart';
@@ -25,8 +27,8 @@ class _MainScreenState extends State<MainScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
     CallLogScreen(),
-    ComingSoonScreen(pageTitle: 'Caller Overview'), // Updated page title
-    ComingSoonScreen(pageTitle: 'Admission Baseline'), // Updated page title
+    CallerOverviewScreen(), // Updated page title
+    AdmissionBaselineScreen(), // Updated page title
   ];
 
   final List<String> _titles = [

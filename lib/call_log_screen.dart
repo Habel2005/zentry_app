@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:myapp/call_details_screen.dart';
 import 'package:myapp/models/admin_call_list.dart';
 import 'package:myapp/refresh_screen.dart';
 import 'package:myapp/supabase_service.dart';
@@ -12,239 +13,175 @@ class CallLogScreen extends StatefulWidget {
 }
 
 class _CallLogScreenState extends State<CallLogScreen> {
-  int _rowsPerPage = PaginatedDataTable.defaultRowsPerPage;
-  int? _sortColumnIndex;
-  bool _sortAscending = true;
-  _CallListDataSource? _dataSource;
+  late Future<List<AdminCallList>> _callListFuture;
 
   @override
   void initState() {
     super.initState();
-    _dataSource = _CallListDataSource(context);
+    _loadData();
   }
 
-  void _sort<T>(Comparable<T> Function(AdminCallList call) getField, int columnIndex, bool ascending) {
-    _dataSource!.sort<T>(getField, ascending);
+  void _loadData() {
+    _callListFuture = SupabaseService().getCallList();
+  }
+
+  Future<void> _refreshData() async {
     setState(() {
-      _sortColumnIndex = columnIndex;
-      _sortAscending = ascending;
+      _loadData();
     });
+  }
+
+  void _navigateToDetails(AdminCallList call) {
+    if (call.callId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CallDetailsScreen(callId: call.callId!),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDarkMode ? const Color(0xFF1C1C1E) : Colors.white;
+    final textColor = isDarkMode ? Colors.white.withAlpha(230) : Colors.black87;
 
-    // 2. Replace RefreshIndicator with RiveRefreshIndicator
     return RiveRefreshIndicator(
-      riveAnimationPath: 'assets/riv/load.riv', // Ensure path is correct
-      onRefresh: () async {
-        // We simulate a small delay or wait for the data source to fetch
-        setState(() {
-          _dataSource = _CallListDataSource(context);
-        });
-        // Give the UI a moment to show the 'Success/Complete' part of the Rive animation
-        await Future.delayed(const Duration(seconds: 1));
-      },
-      child: ListView(
-        // 3. CRITICAL: AlwaysScrollableScrollPhysics makes sure the pull gesture 
-        // works even if the table has very few rows.
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 100, 20, 20),
-        children: [
-          Theme(
-            data: _createDataTableTheme(context, isDarkMode),
-            child: PaginatedDataTable(
-              showCheckboxColumn: false,
-              rowsPerPage: _rowsPerPage,
-              onRowsPerPageChanged: (int? value) {
-                setState(() {
-                  _rowsPerPage = value!;
-                });
+        riveAnimationPath: 'assets/riv/load.riv',
+        onRefresh: _refreshData,
+        child: FutureBuilder<List<AdminCallList>>(
+          future: _callListFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('Error: ${snapshot.error}', style: TextStyle(color: textColor)),
+              );
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                child: Text('No call logs found.'),
+              );
+            }
+
+            final calls = snapshot.data!;
+
+            return ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
+              itemCount: calls.length,
+              itemBuilder: (context, index) {
+                final call = calls[index];
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  color: cardColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(
+                      color: isDarkMode ? Colors.white.withAlpha(50) : Colors.grey.withAlpha(100),
+                      width: 1,
+                    ),
+                  ),
+                  child: InkWell( // Use InkWell for tap effects on the entire card
+                    onTap: () => _navigateToDetails(call),
+                    borderRadius: BorderRadius.circular(12.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                DateFormat.yMd().add_jms().format(call.startTime),
+                                style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 16),
+                              ),
+                              _buildStatusChip(call.status),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildMetric('Duration', '${call.duration}s', isDarkMode),
+                              _buildMetric('Language', call.language, isDarkMode),
+                              _buildSttQualityIndicator(call.sttQuality, isDarkMode),
+                              _buildMetric('Repeat', call.isRepeatCaller ? 'Yes' : 'No', isDarkMode, 
+                                valueColor: call.isRepeatCaller ? Colors.teal : null),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               },
-              sortColumnIndex: _sortColumnIndex,
-              sortAscending: _sortAscending,
-              columns: _getColumns(),
-              source: _dataSource ?? _CallListDataSource(context),
-              columnSpacing: 20,
-              horizontalMargin: 20,
-            ),
-          ),
-        ],
-      ),
-    );
+            );
+          },
+        ));
   }
 
-  ThemeData _createDataTableTheme(BuildContext context, bool isDarkMode) {
-    final theme = Theme.of(context);
-    final headingColor = isDarkMode ? Colors.white : Colors.black87;
-    final dataColor = isDarkMode ? Colors.white70 : Colors.black87;
+  Widget _buildMetric(String label, String value, bool isDarkMode, {Color? valueColor}) {
+     final subTextColor = isDarkMode ? Colors.white.withAlpha(153) : Colors.black54;
+     final defaultColor = isDarkMode ? Colors.white : Colors.black;
 
-    return theme.copyWith(
-      cardTheme: theme.cardTheme.copyWith(
-        color: isDarkMode ? const Color(0xFF1A1A1A).withAlpha(200) : Colors.white,
-        surfaceTintColor: isDarkMode ? null : Colors.white,
-        elevation: 0, // Remove shadow from the card itself
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-          side: BorderSide(
-            color: isDarkMode ? Colors.white.withAlpha(50) : Colors.grey.withAlpha(100),
-            width: 1,
-          ),
-        ),
-      ),
-      dividerColor: isDarkMode ? Colors.white.withAlpha(50) : Colors.grey.withAlpha(100),
-      dataTableTheme: DataTableThemeData(
-        headingRowHeight: 56,
-        dataRowMinHeight: 55,
-        dataRowMaxHeight: 65,
-        headingTextStyle: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: headingColor,
-          fontFamily: 'Poppins',
-          fontSize: 14,
-        ),
-        dataTextStyle: TextStyle(
-          color: dataColor,
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w500,
-        ),
-        headingRowColor: WidgetStateProperty.all(
-          isDarkMode ? Colors.white.withAlpha(26) : Colors.grey.withAlpha(50),
-        ),
-        dataRowColor: WidgetStateProperty.resolveWith<Color?>((states) {
-          if (states.contains(WidgetState.hovered)) {
-            return isDarkMode ? Colors.white.withAlpha(20) : Colors.grey.withAlpha(40);
-          }
-          return Colors.transparent; // Default row color
-        }),
-        dividerThickness: 1,
-      ),
-    );
-  }
-
-  List<DataColumn> _getColumns() {
-    return [
-      DataColumn(
-        label: const Text('Start Time'),
-        onSort: (columnIndex, ascending) => _sort<DateTime>((d) => d.startTime, columnIndex, ascending),
-      ),
-      DataColumn(
-        label: const Text('Duration (s)'),
-        numeric: true,
-        onSort: (columnIndex, ascending) => _sort<num>((d) => d.duration, columnIndex, ascending),
-      ),
-      DataColumn(
-        label: const Text('Status'),
-        onSort: (columnIndex, ascending) => _sort<String>((d) => d.status, columnIndex, ascending),
-      ),
-      DataColumn(
-        label: const Text('Language'),
-        onSort: (columnIndex, ascending) => _sort<String>((d) => d.language, columnIndex, ascending),
-      ),
-      DataColumn(
-        label: const Text('STT Quality'),
-        onSort: (columnIndex, ascending) => _sort<String>((d) => d.sttQuality, columnIndex, ascending),
-      ),
-      const DataColumn(label: Text('Repeat')),
-    ];
-  }
-}
-
-class _CallListDataSource extends DataTableSource {
-  final BuildContext context;
-  List<AdminCallList> _calls = [];
-  bool _loading = true;
-
-  _CallListDataSource(this.context) {
-    _fetchData();
-  }
-
-  Future<void> _fetchData() async {
-    _loading = true;
-    notifyListeners();
-    try {
-      _calls = await SupabaseService().getCallList();
-    } catch (e) {
-      if(context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error fetching calls: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      _loading = false;
-      notifyListeners();
-    }
-  }
-
-  @override
-  DataRow? getRow(int index) {
-    if (index >= _calls.length || _loading) {
-      return null;
-    }
-    final call = _calls[index];
-
-    return DataRow.byIndex(
-      index: index,
-      onSelectChanged: (isSelected) {
-        if (isSelected ?? false) {
-          // Implement navigation to call detail screen
-        }
-      },
-      cells: [
-        DataCell(Text(DateFormat.yMd().add_jms().format(call.startTime))),
-        DataCell(Text(call.duration.toString())),
-        DataCell(_buildStatusChip(call.status)),
-        DataCell(Text(call.language)),
-        DataCell(_buildSttQualityIndicator(call.sttQuality)),
-        DataCell(call.isRepeatCaller ? const Icon(Icons.check_circle, color: Colors.teal, size: 20) : const SizedBox()),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(label, style: TextStyle(color: subTextColor, fontSize: 12)),
+        const SizedBox(height: 4),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: valueColor ?? defaultColor)),
       ],
     );
   }
 
-  @override
-  bool get isRowCountApproximate => false;
-
-  @override
-  int get rowCount => _loading ? 10 : _calls.length;
-
-  @override
-  int get selectedRowCount => 0;
-
-  void sort<T>(Comparable<T> Function(AdminCallList d) getField, bool ascending) {
-    _calls.sort((a, b) {
-      final aValue = getField(a);
-      final bValue = getField(b);
-      return ascending ? Comparable.compare(aValue, bValue) : Comparable.compare(bValue, aValue);
-    });
-    notifyListeners();
-  }
 
   Widget _buildStatusChip(String status) {
-    Color color;
+    Color chipColor;
+    Color textColor;
     String label;
     switch (status.toLowerCase()) {
       case 'completed':
-        color = Colors.green;
+        chipColor = Colors.green.withOpacity(0.2);
+        textColor = Colors.green.shade300;
         label = 'Completed';
         break;
       case 'dropped':
-        color = Colors.red;
+        chipColor = Colors.red.withOpacity(0.2);
+        textColor = Colors.red.shade300;
         label = 'Dropped';
         break;
       case 'ongoing':
-        color = Colors.orange;
+        chipColor = Colors.orange.withOpacity(0.2);
+        textColor = Colors.orange.shade300;
         label = 'Ongoing';
         break;
       default:
-        color = Colors.grey;
+        chipColor = Colors.grey.withOpacity(0.2);
+        textColor = Colors.grey.shade300;
         label = status;
     }
-    return Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold));
+    return Chip(
+      label: Text(label, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 12)),
+      backgroundColor: chipColor,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+    );
   }
 
-  Widget _buildSttQualityIndicator(String quality) {
+  Widget _buildSttQualityIndicator(String quality, bool isDarkMode) {
     Color color;
+    final subTextColor = isDarkMode ? Colors.white.withAlpha(153) : Colors.black54;
+
     switch (quality.toLowerCase()) {
       case 'good':
         color = Colors.cyan;
@@ -258,16 +195,23 @@ class _CallListDataSource extends DataTableSource {
       default:
         return Text(quality);
     }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        Text('STT Quality', style: TextStyle(color: subTextColor, fontSize: 12)),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+            ),
+            const SizedBox(width: 8),
+            Text(quality, style: const TextStyle(fontWeight: FontWeight.bold)),
+          ],
         ),
-        const SizedBox(width: 8),
-        Text(quality),
       ],
     );
   }
