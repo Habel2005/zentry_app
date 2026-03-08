@@ -379,12 +379,18 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.teal),
                 SizedBox(width: 8),
-                Text('Resolved & Handled', style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 16)),
+                Flexible(
+                  child: Text(
+                    'Resolved & Handled', 
+                    style: TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),
           TextButton.icon(
-            onPressed: () => _updateStatus('pending'), // UNDO functionality
+            onPressed: () => _updateStatus('contacted'), // UNDO back to contacted
             icon: const Icon(Icons.undo),
             label: const Text('Undo'),
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
@@ -398,31 +404,47 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
         if (currentStatus == 'pending')
           Expanded(
             child: OutlinedButton(
-              onPressed: () => _updateStatus('pending'),
-              style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), side: const BorderSide(color: Colors.blue)),
-              child: const Text('Mark Contacted', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+              onPressed: () => _updateStatus('contacted'), // Move state forward
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16), 
+                side: const BorderSide(color: Colors.blue)
+              ),
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Mark Contacted', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+              ),
             ),
           ),
-        if (currentStatus == 'pending')
+          
+        if (currentStatus == 'contacted')
           Expanded(
-            child: TextButton.icon(
-               onPressed: () => _updateStatus('pending'), // UNDO functionality
-               icon: const Icon(Icons.undo),
-               label: const Text('Undo'),
-               style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            child: OutlinedButton.icon(
+               onPressed: () => _updateStatus('pending'), // UNDO back to pending
+               icon: const Icon(Icons.undo, size: 18),
+               label: const Text('Undo', style: TextStyle(fontWeight: FontWeight.bold)),
+               style: OutlinedButton.styleFrom(
+                 padding: const EdgeInsets.symmetric(vertical: 16),
+                 foregroundColor: Colors.grey, 
+                 side: const BorderSide(color: Colors.grey)
+               ),
             ),
           ),
+          
         const SizedBox(width: 12),
+        
         Expanded(
-          flex: 2,
+          flex: 1, 
           child: ElevatedButton(
-            onPressed: () => _updateStatus('resolved'),
+            onPressed: () => _updateStatus('resolved'), // Complete the flow
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Approve & Resolve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text('Approve & Resolve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
           ),
         ),
       ],
@@ -430,11 +452,19 @@ class _ConsultationDetailScreenState extends State<ConsultationDetailScreen> {
   }
 
   Widget _buildStatusBadge(String status) {
-    Color color = status == 'pending' ? Colors.amber.shade700 : status == 'pending' ? Colors.blue.shade500 : Colors.teal.shade500;
+    // Fixed the duplicated 'pending' here so 'contacted' gets the blue badge!
+    Color color = status == 'pending' ? Colors.amber.shade700 
+                : status == 'contacted' ? Colors.blue.shade500 
+                : Colors.teal.shade500;
+                
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
-      child: Text(status.toUpperCase(), style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+      child: Text(
+        status.toUpperCase(), 
+        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)
+      ),
     );
   }
+
 }

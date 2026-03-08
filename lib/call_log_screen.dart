@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:myapp/call_details_screen.dart';
+import 'package:myapp/call_details_screen.dart'; // Ensure correct import name
 import 'package:myapp/models/admin_call_list.dart';
 import 'package:myapp/refresh_screen.dart';
 import 'package:myapp/supabase_service.dart';
@@ -14,11 +14,48 @@ class CallLogScreen extends StatefulWidget {
 
 class _CallLogScreenState extends State<CallLogScreen> {
   late Future<List<AdminCallList>> _callListFuture;
+  
+  // --- Search & Filter State ---
+  String _searchQuery = '';
+  String _selectedFilter = 'All';
+  final TextEditingController _searchController = TextEditingController();
+
+  // --- NEW: Scroll Controller & FAB State ---
+  final ScrollController _scrollController = ScrollController();
+  bool _showBackToTopButton = false;
+
+  final List<String> _filters = [
+    'All',
+    'Completed',
+    'Dropped',
+    'Repeat Callers',
+    'Bad STT',
+  ];
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    
+    // --- NEW: Listen to scroll position ---
+    _scrollController.addListener(() {
+      if (_scrollController.offset >= 400 && !_showBackToTopButton) {
+        setState(() {
+          _showBackToTopButton = true; // Show when scrolled down 400 pixels
+        });
+      } else if (_scrollController.offset < 400 && _showBackToTopButton) {
+        setState(() {
+          _showBackToTopButton = false; // Hide when near top
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose(); // Don't forget to dispose the controller!
+    super.dispose();
   }
 
   void _loadData() {
@@ -42,20 +79,76 @@ class _CallLogScreenState extends State<CallLogScreen> {
     }
   }
 
+  // --- NEW: Scroll To Top Action ---
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  List<AdminCallList> _getFilteredCalls(List<AdminCallList> calls) {
+    return calls.where((call) {
+      final query = _searchQuery.toLowerCase();
+      final matchesSearch = query.isEmpty ||
+          (call.callId?.toLowerCase().contains(query) ?? false) ||
+          (call.language?.toLowerCase().contains(query) ?? false);
+
+      if (!matchesSearch) return false;
+
+      switch (_selectedFilter) {
+        case 'Completed':
+          return call.status.toLowerCase() == 'completed';
+        case 'Dropped':
+          return call.status.toLowerCase() == 'dropped';
+        case 'Repeat Callers':
+          return call.isRepeatCaller == true;
+        case 'Bad STT':
+          return call.sttQuality.toLowerCase() == 'low' || call.sttQuality.toLowerCase() == 'failed';
+        case 'All':
+        default:
+          return true;
+      }
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDarkMode ? const Color(0xFF1C1C1E) : Colors.white;
     final textColor = isDarkMode ? Colors.white.withAlpha(230) : Colors.black87;
 
-    return RiveRefreshIndicator(
+    // Wrapped everything in a transparent Scaffold to hold the FloatingActionButton
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      
+      // --- NEW: Animated Floating Action Button ---
+      floatingActionButton: AnimatedScale(
+        scale: _showBackToTopButton ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutBack,
+        child: Padding(
+          // Padding to push the button above your custom bottom navigation bar
+          padding: const EdgeInsets.only(bottom: 80.0, right: 8.0),
+          child: FloatingActionButton(
+            onPressed: _scrollToTop,
+            backgroundColor: Colors.teal,
+            elevation: 4,
+            mini: true, // Smaller profile looks cleaner on logs
+            child: const Icon(Icons.keyboard_arrow_up_rounded, color: Colors.white, size: 28),
+          ),
+        ),
+      ),
+      
+      body: RiveRefreshIndicator(
         riveAnimationPath: 'assets/riv/load.riv',
         onRefresh: _refreshData,
         child: FutureBuilder<List<AdminCallList>>(
           future: _callListFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator(color: Colors.teal));
             }
             if (snapshot.hasError) {
               return Center(
@@ -63,70 +156,184 @@ class _CallLogScreenState extends State<CallLogScreen> {
               );
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(
-                child: Text('No call logs found.'),
-              );
+              return const Center(child: Text('No call logs found.'));
             }
 
-            final calls = snapshot.data!;
+            final allCalls = snapshot.data!;
+            final filteredCalls = _getFilteredCalls(allCalls);
 
-            return ListView.builder(
+            return CustomScrollView(
+              controller: _scrollController, // Attach the controller here!
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
-              itemCount: calls.length,
-              itemBuilder: (context, index) {
-                final call = calls[index];
-                return Card(
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  color: cardColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    side: BorderSide(
-                      color: isDarkMode ? Colors.white.withAlpha(50) : Colors.grey.withAlpha(100),
-                      width: 1,
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSearchBar(isDarkMode),
+                        const SizedBox(height: 16),
+                        _buildFilterChips(isDarkMode),
+                        const SizedBox(height: 8),
+                        if (filteredCalls.isEmpty)
+                           const Padding(
+                             padding: EdgeInsets.only(top: 40.0),
+                             child: Center(child: Text('No calls match these filters.', style: TextStyle(color: Colors.grey))),
+                           ),
+                      ],
                     ),
                   ),
-                  child: InkWell( // Use InkWell for tap effects on the entire card
-                    onTap: () => _navigateToDetails(call),
-                    borderRadius: BorderRadius.circular(12.0),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                DateFormat.yMd().add_jms().format(call.startTime),
-                                style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 16),
-                              ),
-                              _buildStatusChip(call.status),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          const Divider(),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildMetric('Duration', '${call.duration}s', isDarkMode),
-                              _buildMetric('Language', call.language, isDarkMode),
-                              _buildSttQualityIndicator(call.sttQuality, isDarkMode),
-                              _buildMetric('Repeat', call.isRepeatCaller ? 'Yes' : 'No', isDarkMode, 
-                                valueColor: call.isRepeatCaller ? Colors.teal : null),
-                            ],
-                          ),
-                        ],
-                      ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final call = filteredCalls[index];
+                        return _buildCallCard(call, cardColor, textColor, isDarkMode);
+                      },
+                      childCount: filteredCalls.length,
                     ),
                   ),
-                );
-              },
+                ),
+              ],
             );
           },
-        ));
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(bool isDarkMode) {
+    return TextField(
+      controller: _searchController,
+      onChanged: (value) => setState(() => _searchQuery = value),
+      style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+      decoration: InputDecoration(
+        hintText: 'Search Session ID or Language...',
+        hintStyle: TextStyle(color: Colors.grey.shade500),
+        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+        suffixIcon: _searchQuery.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear, color: Colors.grey),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+              )
+            : null,
+        filled: true,
+        fillColor: isDarkMode ? const Color(0xFF1C1C1E) : Colors.white,
+        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: isDarkMode ? Colors.white12 : Colors.black12),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: isDarkMode ? Colors.white12 : Colors.black12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChips(bool isDarkMode) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: _filters.map((filter) {
+          final isSelected = _selectedFilter == filter;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ChoiceChip(
+              label: Text(filter),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  _selectedFilter = selected ? filter : 'All';
+                });
+              },
+              selectedColor: Colors.teal.withOpacity(0.2),
+              backgroundColor: isDarkMode ? Colors.grey.shade900 : Colors.grey.shade200,
+              labelStyle: TextStyle(
+                color: isSelected 
+                    ? Colors.teal 
+                    : (isDarkMode ? Colors.white70 : Colors.black87),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              side: BorderSide(
+                color: isSelected ? Colors.teal.withOpacity(0.5) : Colors.transparent,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildCallCard(AdminCallList call, Color cardColor, Color textColor, bool isDarkMode) {
+    final bool isAiFailure = call.status.toLowerCase() == 'dropped' && 
+                            (call.sttQuality.toLowerCase() == 'low' || call.sttQuality.toLowerCase() == 'failed');
+
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      color: cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+        side: BorderSide(
+          color: isAiFailure 
+              ? Colors.redAccent.withOpacity(0.5) 
+              : (isDarkMode ? Colors.white.withAlpha(50) : Colors.grey.withAlpha(100)),
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => _navigateToDetails(call),
+        borderRadius: BorderRadius.circular(12.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        DateFormat.yMd().add_jms().format(call.startTime),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 16),
+                      ),
+                      if (isAiFailure) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 18),
+                      ]
+                    ],
+                  ),
+                  _buildStatusChip(call.status),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildMetric('Duration', '${call.duration}s', isDarkMode),
+                  _buildMetric('Language', call.language ?? 'N/A', isDarkMode),
+                  _buildSttQualityIndicator(call.sttQuality, isDarkMode),
+                  _buildMetric('Repeat', call.isRepeatCaller ? 'Yes' : 'No', isDarkMode, 
+                    valueColor: call.isRepeatCaller ? Colors.teal : null),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildMetric(String label, String value, bool isDarkMode, {Color? valueColor}) {
@@ -142,7 +349,6 @@ class _CallLogScreenState extends State<CallLogScreen> {
       ],
     );
   }
-
 
   Widget _buildStatusChip(String status) {
     Color chipColor;
@@ -175,6 +381,7 @@ class _CallLogScreenState extends State<CallLogScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
+      side: BorderSide.none,
     );
   }
 
@@ -193,7 +400,7 @@ class _CallLogScreenState extends State<CallLogScreen> {
         color = Colors.pinkAccent;
         break;
       default:
-        return Text(quality);
+        color = Colors.grey;
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,

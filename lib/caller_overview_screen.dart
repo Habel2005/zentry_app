@@ -215,7 +215,6 @@ class _CallerInterestSheetState extends State<CallerInterestSheet> {
 
     final humanId = 'Student #${widget.callerId.substring(0, 6).toUpperCase()}';
 
-    // Wrapping in SafeArea and SingleChildScrollView fixes ALL pixel overflow errors
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.all(24.0),
@@ -228,7 +227,7 @@ class _CallerInterestSheetState extends State<CallerInterestSheet> {
         ),
         child: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Tells sheet to fit content perfectly
+            mainAxisSize: MainAxisSize.min, 
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Drag Handle
@@ -244,48 +243,44 @@ class _CallerInterestSheetState extends State<CallerInterestSheet> {
                 ),
               ),
               
-              // --- HEADER & QUICK ACTIONS ---
+              // --- HEADER (CLEANED UP) ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        humanId,
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'System Hash: ${widget.phoneHash.substring(0, 10)}...', 
-                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'monospace'),
-                      ),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          humanId,
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textColor),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'System Hash: ${widget.phoneHash.substring(0, 10)}...', 
+                          style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'monospace'),
+                        ),
+                      ],
+                    ),
                   ),
                   
-                  // NEW: Useful Action Buttons!
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          // TODO: Implement url_launcher 'sms:'
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SMS Action Triggered')));
-                        },
-                        icon: const Icon(Icons.message_rounded, color: Colors.blue),
-                        tooltip: 'Send SMS',
-                        style: IconButton.styleFrom(backgroundColor: Colors.blue.withOpacity(0.1)),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        onPressed: () {
-                          // TODO: Implement url_launcher 'tel:'
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Call Action Triggered')));
-                        },
-                        icon: const Icon(Icons.call, color: Colors.green),
-                        tooltip: 'Call Back',
-                        style: IconButton.styleFrom(backgroundColor: Colors.green.withOpacity(0.1)),
-                      ),
-                    ],
+                  // Visual Badge instead of fake action buttons
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.verified_user, size: 14, color: Colors.blue),
+                        SizedBox(width: 4),
+                        Text('Profile', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ],
+                    ),
                   )
                 ],
               ),
@@ -322,18 +317,16 @@ class _CallerInterestSheetState extends State<CallerInterestSheet> {
                   }
 
                   return ListView.builder(
-                    shrinkWrap: true, // Crucial for scrolling inside Column
+                    shrinkWrap: true, 
                     physics: const NeverScrollableScrollPhysics(), 
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final interest = snapshot.data![index];
                       
-                      // Using the strict clean logic so we only show what the DB actually has
                       final programCode = _cleanDbString(interest['program_code']);
                       final quotaType = _cleanDbString(interest['quota_type']);
                       final strength = _cleanDbString(interest['strength']);
 
-                      // If the DB actually recorded nothing useful, don't show a blank box
                       if (programCode == null && quotaType == null && strength == null) {
                         return const SizedBox.shrink();
                       }
@@ -403,7 +396,7 @@ class _CallerInterestSheetState extends State<CallerInterestSheet> {
                   }
 
                   return ListView.builder(
-                    shrinkWrap: true, // Crucial for scrolling inside Column
+                    shrinkWrap: true, 
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
@@ -441,7 +434,7 @@ class _CallerInterestSheetState extends State<CallerInterestSheet> {
                   );
                 },
               ),
-              const SizedBox(height: 20), // Bottom padding buffer
+              const SizedBox(height: 20),
             ],
           ),
         ),
